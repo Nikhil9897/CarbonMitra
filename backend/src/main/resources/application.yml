@@ -1,0 +1,103 @@
+spring:
+  application:
+    name: carbontrack
+
+  # ── Brevo SMTP Mail ────────────────
+  mail:
+    host: ${BREVO_SMTP_HOST:smtp-relay.brevo.com}
+    port: ${BREVO_SMTP_PORT:587}
+    username: ${BREVO_SMTP_USERNAME}
+    password: ${BREVO_SMTP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+  # ── MySQL Datasource ──────────────
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:carbontrack}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # ── JPA / Hibernate ───────────────
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+    show-sql: false
+
+  # ── Flyway Migrations ─────────────
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+  # ── Redis Cache ────────────────────
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+  # ── Google OAuth2 ──────────────────
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope:
+              - email
+              - profile
+            redirect-uri: "{baseUrl}/login/oauth2/code/google"
+
+# ── JWT Configuration ────────────────
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration-ms: 3600000 # 1 hour
+    refresh-expiration-ms: 604800000 # 7 days
+  oauth2:
+    authorized-redirect-uris: ${FRONTEND_URL:http://localhost:5173}/oauth2/redirect
+
+# ── Server ───────────────────────────
+server:
+  port: ${PORT:8080}
+
+# ── Springdoc / Swagger ──────────────
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+
+# ── Cohere AI ────────────────────────
+cohere:
+  api-key: ${COHERE_API_KEY}
+
+# ── Actuator Health Endpoint ─────────
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# ── Logging ──────────────────────────
+logging:
+  level:
+    root: INFO
+    com.carbontrack: INFO
+    org.springframework.security: WARN

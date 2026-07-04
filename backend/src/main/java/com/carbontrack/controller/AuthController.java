@@ -1,0 +1,59 @@
+package com.carbontrack.controller;
+
+import com.carbontrack.dto.*;
+import com.carbontrack.service.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/auth")
+@Tag(name = "Authentication", description = "Endpoints for user registration, login, and token refresh")
+public class AuthController {
+
+    private final AuthService authService;
+
+    public AuthController(AuthService authService) {
+        this.authService = authService;
+    }
+
+    @PostMapping("/login")
+    @Operation(summary = "Authenticate user and return JWT tokens")
+    public ResponseEntity<ApiResponse<AuthResponse>> authenticateUser(@Valid @RequestBody AuthRequest authRequest) {
+        AuthResponse response = authService.login(authRequest);
+        return ResponseEntity.ok(ApiResponse.success("Login successful", response));
+    }
+
+    @PostMapping("/register")
+    @Operation(summary = "Register a new local user")
+    public ResponseEntity<ApiResponse<AuthResponse>> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
+        AuthResponse response = authService.register(registerRequest);
+        return ResponseEntity.ok(ApiResponse.success("User registered successfully", response));
+    }
+
+    @PostMapping("/refresh")
+    @Operation(summary = "Refresh expired JWT access token using a valid refresh token")
+    public ResponseEntity<ApiResponse<TokenRefreshResponse>> refreshAccessToken(@Valid @RequestBody TokenRefreshRequest refreshRequest) {
+        TokenRefreshResponse response = authService.refreshToken(refreshRequest);
+        return ResponseEntity.ok(ApiResponse.success("Token refreshed successfully", response));
+    }
+
+    @PostMapping("/forgot-password")
+    @Operation(summary = "Request a password reset link")
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request);
+        return ResponseEntity.ok(ApiResponse.success("If the email is registered, a password reset link has been sent.", null));
+    }
+
+    @PostMapping("/reset-password")
+    @Operation(summary = "Reset password using the reset token")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request);
+        return ResponseEntity.ok(ApiResponse.success("Password reset successfully. You can now log in.", null));
+    }
+}
