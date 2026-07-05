@@ -10,13 +10,10 @@ import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 
-import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
-
 import java.time.Duration;
 
 @Configuration
 @Slf4j
-@EnableRedisRepositories(enabled = false)
 public class RedisConfig implements CachingConfigurer {
 
     @Bean
@@ -37,25 +34,25 @@ public class RedisConfig implements CachingConfigurer {
         return new CacheErrorHandler() {
             @Override
             public void handleCacheGetError(RuntimeException exception, Cache cache, Object key) {
-                log.warn("Redis GET failure for cache '{}' (key '{}'): {}. Falling back to database.", 
+                log.warn("Redis GET failure for cache '{}' (key '{}'): {}. Falling back to database.",
                         cache.getName(), key, exception.getMessage());
             }
 
             @Override
             public void handleCachePutError(RuntimeException exception, Cache cache, Object key, Object value) {
-                log.warn("Redis PUT failure for cache '{}' (key '{}'): {}. Writing directly without caching.", 
+                log.warn("Redis PUT failure for cache '{}' (key '{}'): {}. Writing directly without caching.",
                         cache.getName(), key, exception.getMessage());
             }
 
             @Override
             public void handleCacheEvictError(RuntimeException exception, Cache cache, Object key) {
-                log.warn("Redis EVICT failure for cache '{}' (key '{}'): {}. Eviction bypassed.", 
+                log.warn("Redis EVICT failure for cache '{}' (key '{}'): {}. Eviction bypassed.",
                         cache.getName(), key, exception.getMessage());
             }
 
             @Override
             public void handleCacheClearError(RuntimeException exception, Cache cache) {
-                log.warn("Redis CLEAR failure for cache '{}': {}. Clear bypassed.", 
+                log.warn("Redis CLEAR failure for cache '{}': {}. Clear bypassed.",
                         cache.getName(), exception.getMessage());
             }
         };

@@ -38,6 +38,8 @@ spring:
       password: ${REDIS_PASSWORD:}
       ssl:
         enabled: ${REDIS_SSL_ENABLED:false}
+      repositories:
+        enabled: false
 
   # ── Google OAuth2 ──────────────────
   security:

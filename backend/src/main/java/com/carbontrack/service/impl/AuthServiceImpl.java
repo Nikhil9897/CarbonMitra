@@ -13,6 +13,7 @@ import com.carbontrack.repository.UserRepository;
 import com.carbontrack.security.JwtTokenProvider;
 import com.carbontrack.security.UserPrincipal;
 import com.carbontrack.service.AuthService;
+import com.carbontrack.service.TokenBlacklistService;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -38,6 +39,7 @@ public class AuthServiceImpl implements AuthService {
     private final ApplicationEventPublisher eventPublisher;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final EmailService emailService;
+    private final TokenBlacklistService tokenBlacklistService;
 
     public AuthServiceImpl(AuthenticationManager authenticationManager,
                            UserRepository userRepository,
@@ -46,7 +48,8 @@ public class AuthServiceImpl implements AuthService {
                            JwtTokenProvider tokenProvider,
                            ApplicationEventPublisher eventPublisher,
                            PasswordResetTokenRepository passwordResetTokenRepository,
-                           EmailService emailService) {
+                           EmailService emailService,
+                           TokenBlacklistService tokenBlacklistService) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.organizationRepository = organizationRepository;
@@ -55,6 +58,7 @@ public class AuthServiceImpl implements AuthService {
         this.eventPublisher = eventPublisher;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.emailService = emailService;
+        this.tokenBlacklistService = tokenBlacklistService;
     }
 
     @Override
@@ -174,12 +178,16 @@ public class AuthServiceImpl implements AuthService {
 
         if (tokenProvider.validateToken(requestRefreshToken)) {
             String username = tokenProvider.getUsernameFromJWT(requestRefreshToken);
-            User user = userRepository.findByUsername(username)
+            userRepository.findByUsername(username)
                     .orElseThrow(() -> new TokenRefreshException(requestRefreshToken, "User not found associated with this token"));
 
-            // Rotate refresh token as well for security
-            String newAccessToken = tokenProvider.generateTokenFromUsername(username, 3600000); // 1hr
-            String newRefreshToken = tokenProvider.generateTokenFromUsername(username, 604800000); // 7days
+            // Blacklist the old refresh token
+            long remainingMs = tokenProvider.getRemainingExpirationMs(requestRefreshToken);
+            tokenBlacklistService.blacklistToken(requestRefreshToken, remainingMs);
+
+            // Rotate both tokens for security
+            String newAccessToken = tokenProvider.generateAccessTokenFromUsername(username);
+            String newRefreshToken = tokenProvider.generateRefreshTokenFromUsername(username);
 
             return TokenRefreshResponse.builder()
                     .accessToken(newAccessToken)
@@ -187,6 +195,24 @@ public class AuthServiceImpl implements AuthService {
                     .build();
         } else {
             throw new TokenRefreshException(requestRefreshToken, "Refresh token is invalid or expired");
+        }
+    }
+
+    @Override
+    public void logout(String accessToken, String refreshToken) {
+        // Blacklist access token with its remaining TTL
+        if (accessToken != null && !accessToken.isBlank()) {
+            long accessTtl = tokenProvider.getRemainingExpirationMs(accessToken);
+            if (accessTtl > 0) {
+                tokenBlacklistService.blacklistToken(accessToken, accessTtl);
+            }
+        }
+        // Blacklist refresh token with its remaining TTL
+        if (refreshToken != null && !refreshToken.isBlank()) {
+            long refreshTtl = tokenProvider.getRemainingExpirationMs(refreshToken);
+            if (refreshTtl > 0) {
+                tokenBlacklistService.blacklistToken(refreshToken, refreshTtl);
+            }
         }
     }
 
