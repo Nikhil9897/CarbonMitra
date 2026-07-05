@@ -76,8 +76,12 @@ public class AIAssistantController {
 
         } catch (Exception e) {
             log.error("Error communicating with Cohere API: {}", e.getMessage(), e);
+            String customMessage = "Oops! I encountered an error communicating with my neural core: " + e.getMessage() + ". Please check backend logs or try again shortly.";
+            if (e.getMessage() != null && e.getMessage().contains("401")) {
+                customMessage = "Hi! I couldn't connect to my neural core because the provided Cohere API key is unauthorized or invalid (401 Unauthorized). Please check your COHERE_API_KEY environment variable configuration.";
+            }
             Map<String, String> errorFallback = new HashMap<>();
-            errorFallback.put("text", "Oops! I encountered an error communicating with my neural core: " + e.getMessage() + ". Please check backend logs or try again shortly.");
+            errorFallback.put("text", customMessage);
             return ResponseEntity.ok(ApiResponse.success("AI error occurred, returned graceful error fallback response", errorFallback));
         }
     }
