@@ -42,7 +42,6 @@ public class User {
     @JoinColumn(name = "organization_id")
     private Organization organization;
 
-    @Lob
-    @Column(name = "profile_picture", columnDefinition = "LONGTEXT")
+    @Column(name = "profile_picture", columnDefinition = "TEXT")
     private String profilePicture;
 }

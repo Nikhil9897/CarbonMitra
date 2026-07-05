@@ -68,7 +68,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('refreshToken', data.refreshToken);
         localStorage.setItem('user', JSON.stringify(userProfile));
         setUser(userProfile);
-        toast.success('Registration successful! Welcome to CarbonTrack.');
+        toast.success('Registration successful! Welcome to CarbonMitra.');
         return true;
       }
     } catch (error) {

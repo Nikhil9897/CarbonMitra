@@ -2,12 +2,12 @@ spring:
   application:
     name: carbontrack
 
-  # ── Brevo SMTP Mail ────────────────
+  # ── Gmail SMTP Mail ─────────────────
   mail:
-    host: ${BREVO_SMTP_HOST:smtp-relay.brevo.com}
-    port: ${BREVO_SMTP_PORT:587}
-    username: ${BREVO_SMTP_USERNAME}
-    password: ${BREVO_SMTP_PASSWORD}
+    host: smtp.gmail.com
+    port: 587
+    username: ${SPRING_MAIL_USERNAME}
+    password: ${SPRING_MAIL_PASSWORD}
     properties:
       mail:
         smtp:
@@ -18,12 +18,12 @@ spring:
           timeout: 5000
           writetimeout: 5000
 
-  # ── MySQL Datasource ──────────────
+  # ── PostgreSQL Datasource ─────────
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:carbontrack}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-    username: ${DB_USER:root}
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${DB_USER}
     password: ${DB_PASSWORD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    driver-class-name: org.postgresql.Driver
 
   # ── JPA / Hibernate ───────────────
   jpa:
@@ -31,7 +31,7 @@ spring:
       ddl-auto: validate
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
     show-sql: false
 

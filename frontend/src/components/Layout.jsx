@@ -77,9 +77,13 @@ const Layout = ({ children }) => {
             {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
           <Link to="/dashboard" className="flex items-center space-x-2">
-            <span className="text-2xl">🌱</span>
+            <img 
+              src="https://res.cloudinary.com/dngurjsdw/image/upload/v1783233674/carbon_tracker_ojorhq.png" 
+              alt="CarbonMitra Logo" 
+              className="h-8 w-auto object-contain" 
+            />
             <span className="font-extrabold text-xl bg-gradient-to-r from-primary-600 to-emerald-500 bg-clip-text text-transparent">
-              CarbonTrack
+              CarbonMitra
             </span>
           </Link>
         </div>
@@ -147,7 +151,7 @@ const Layout = ({ children }) => {
             {/* Footer inside Sidebar for Desktop */}
             <div className="pt-4 border-t border-slate-100 dark:border-dark-800 text-center">
               <p className="text-[11px] text-slate-400 dark:text-slate-600">
-                CarbonTrack © 2026<br />Empowering Net Zero
+                CarbonMitra © 2026<br />Empowering Net Zero
               </p>
             </div>
           </nav>

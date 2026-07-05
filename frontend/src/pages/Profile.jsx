@@ -173,7 +173,7 @@ const Profile = () => {
           <div className="flex justify-between items-start z-10">
             <div>
               <h3 className="text-xs font-bold tracking-widest text-emerald-200 uppercase">Green Identity Card</h3>
-              <p className="text-[10px] text-emerald-300 font-semibold tracking-wider">CarbonTrack System Pass</p>
+              <p className="text-[10px] text-emerald-300 font-semibold tracking-wider">CarbonMitra System Pass</p>
             </div>
             <span className="text-xl">🌍</span>
           </div>
@@ -200,7 +200,7 @@ const Profile = () => {
                 <Sparkles size={14} className="text-emerald-300 fill-emerald-300/30 animate-pulse" />
               </div>
               <p className="text-[10px] text-emerald-200 tracking-wide font-mono select-all">
-                ID: CT-{user?.id?.toString().padStart(6, '0')}
+                ID: CM-{user?.id?.toString().padStart(6, '0')}
               </p>
               <div className="flex flex-col pt-0.5 space-y-0.5">
                 <span className="text-[9px] text-emerald-300 uppercase tracking-widest">Sustainability Tier</span>
@@ -213,7 +213,7 @@ const Profile = () => {
           <div className="flex justify-between items-end border-t border-white/10 pt-2 z-10 text-[9px] font-mono tracking-wider text-emerald-200">
             <div>
               <p className="text-[8px] uppercase tracking-widest text-emerald-300">Authority Issuer</p>
-              <p className="font-bold">CarbonTrack Global</p>
+              <p className="font-bold">CarbonMitra Global</p>
             </div>
             <div>
               <p className="text-[8px] uppercase tracking-widest text-emerald-300">Status</p>

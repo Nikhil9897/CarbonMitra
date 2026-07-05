@@ -8,40 +8,50 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.UrlResource;
 
 @Service
 @Slf4j
 public class EmailServiceImpl implements EmailService {
 
     private final JavaMailSender mailSender;
+    private final String fromEmail;
+    private static final String LOGO_URL = "https://res.cloudinary.com/dngurjsdw/image/upload/v1783233674/carbon_tracker_ojorhq.png";
+    private static final String LOGO_CID = "cid:logo";
 
-    public EmailServiceImpl(JavaMailSender mailSender) {
+    public EmailServiceImpl(JavaMailSender mailSender,
+                            @Value("${spring.mail.username}") String fromEmail) {
         this.mailSender = mailSender;
+        this.fromEmail = fromEmail;
+        log.info("EmailServiceImpl initialized — Gmail sender address='{}'", fromEmail);
     }
 
     @Override
     public void sendWelcomeEmail(User user) {
         String htmlContent = buildWelcomeHtmlTemplate(user.getUsername());
-        
+        String subject = "Welcome to CarbonMitra! 🌍";
         MimeMessage message = mailSender.createMimeMessage();
         try {
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
             helper.setTo(user.getEmail());
-            helper.setSubject("Welcome to CarbonTrack! 🌍");
+            helper.setSubject(subject);
             helper.setText(htmlContent, true);
-            helper.setFrom("no-reply@carbontrack.com");
+            helper.addInline("logo", new UrlResource(LOGO_URL));
+            helper.setFrom(fromEmail);
             
             mailSender.send(message);
-            log.info("Welcome email successfully sent to {}", user.getEmail());
+            log.info("Email sent successfully. Recipient: {}, Subject: '{}'", user.getEmail(), subject);
         } catch (Exception e) {
-            log.warn("Could not send welcome email to {} via SMTP. Falling back to console log.", user.getEmail());
+            log.error("Email delivery failed. Recipient: {}, Subject: '{}'. Error/SMTP Exception: {}", 
+                      user.getEmail(), subject, e.getMessage(), e);
             log.info("\n" +
                     "========================================= HTML WELCOME EMAIL =========================================\n" +
                     "To: {}\n" +
-                    "Subject: Welcome to CarbonTrack! 🌍\n" +
+                    "Subject: {}\n" +
                     "Content:\n{}\n" +
                     "======================================================================================================", 
-                    user.getEmail(), htmlContent);
+                    user.getEmail(), subject, htmlContent);
         }
     }
 
@@ -51,7 +61,7 @@ public class EmailServiceImpl implements EmailService {
                 "<head>\n" +
                 "    <meta charset=\"UTF-8\">\n" +
                 "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n" +
-                "    <title>Welcome to CarbonTrack</title>\n" +
+                "    <title>Welcome to CarbonMitra</title>\n" +
                 "    <style>\n" +
                 "        body {\n" +
                 "            font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;\n" +
@@ -161,12 +171,13 @@ public class EmailServiceImpl implements EmailService {
                 "<body>\n" +
                 "    <div class=\"container\">\n" +
                 "        <div class=\"header\">\n" +
-                "            <h1>Welcome to CarbonTrack!</h1>\n" +
+                "            <img src=\"" + LOGO_CID + "\" alt=\"CarbonMitra Logo\" style=\"height: 50px; width: auto; margin-bottom: 12px;\" />\n" +
+                "            <h1>Welcome to CarbonMitra!</h1>\n" +
                 "            <p>Thank you for helping make our Earth pollution-free</p>\n" +
                 "        </div>\n" +
                 "        <div class=\"content\">\n" +
                 "            <h2>Hello, " + username + "! 👋</h2>\n" +
-                "            <p>Thank you for joining CarbonTrack and taking your first steps toward making the Earth free of pollution! We're thrilled to have you onboard. Our goal is to help you easily monitor, analyze, and reduce your carbon footprint through simple day-to-day actions.</p>" +
+                "            <p>Thank you for joining CarbonMitra and taking your first steps toward making the Earth free of pollution! We're thrilled to have you onboard. Our goal is to help you easily monitor, analyze, and reduce your carbon footprint through simple day-to-day actions.</p>" +
                 "            \n" +
                 "            <p>Here are a few quick steps to get you started on the platform:</p>\n" +
                 "            \n" +
@@ -199,8 +210,8 @@ public class EmailServiceImpl implements EmailService {
                 "            </div>\n" +
                 "        </div>\n" +
                 "        <div class=\"footer\">\n" +
-                "            <p>You received this email because you registered on CarbonTrack.</p>\n" +
-                "            <p>&copy; 2026 CarbonTrack. All rights reserved.</p>\n" +
+                "            <p>You received this email because you registered on CarbonMitra.</p>\n" +
+                "            <p>&copy; 2026 CarbonMitra. All rights reserved.</p>\n" +
                 "        </div>\n" +
                 "    </div>\n" +
                 "</body>\n" +
@@ -210,26 +221,28 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public void sendPasswordResetEmail(User user, String token) {
         String htmlContent = buildPasswordResetHtmlTemplate(user.getUsername(), token);
-        
+        String subject = "Reset Your CarbonMitra Password 🔑";
         MimeMessage message = mailSender.createMimeMessage();
         try {
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
             helper.setTo(user.getEmail());
-            helper.setSubject("Reset Your CarbonTrack Password 🔑");
+            helper.setSubject(subject);
             helper.setText(htmlContent, true);
-            helper.setFrom("no-reply@carbontrack.com");
+            helper.addInline("logo", new UrlResource(LOGO_URL));
+            helper.setFrom(fromEmail);
             
             mailSender.send(message);
-            log.info("Password reset email successfully sent to {}", user.getEmail());
+            log.info("Email sent successfully. Recipient: {}, Subject: '{}'", user.getEmail(), subject);
         } catch (Exception e) {
-            log.warn("Could not send password reset email to {} via SMTP. Falling back to console log.", user.getEmail());
+            log.error("Email delivery failed. Recipient: {}, Subject: '{}'. Error/SMTP Exception: {}", 
+                      user.getEmail(), subject, e.getMessage(), e);
             log.info("\n" +
                     "========================================= HTML RESET PASSWORD EMAIL =========================================\n" +
                     "To: {}\n" +
-                    "Subject: Reset Your CarbonTrack Password 🔑\n" +
+                    "Subject: {}\n" +
                     "Content:\n{}\n" +
                     "=============================================================================================================", 
-                    user.getEmail(), htmlContent);
+                    user.getEmail(), subject, htmlContent);
         }
     }
 
@@ -324,12 +337,13 @@ public class EmailServiceImpl implements EmailService {
                 "<body>\n" +
                 "    <div class=\"container\">\n" +
                 "        <div class=\"header\">\n" +
+                "            <img src=\"" + LOGO_CID + "\" alt=\"CarbonMitra Logo\" style=\"height: 50px; width: auto; margin-bottom: 12px;\" />\n" +
                 "            <h1>Reset Your Password</h1>\n" +
-                "            <p>CarbonTrack Security Notification</p>\n" +
+                "            <p>CarbonMitra Security Notification</p>\n" +
                 "        </div>\n" +
                 "        <div class=\"content\">\n" +
                 "            <h2>Hello, " + username + "! 👋</h2>\n" +
-                "            <p>We received a request to reset the password for your CarbonTrack account. Click the button below to choose a new password:</p>\n" +
+                "            <p>We received a request to reset the password for your CarbonMitra account. Click the button below to choose a new password:</p>\n" +
                 "            \n" +
                 "            <div class=\"btn-container\">\n" +
                 "                <a href=\"" + resetUrl + "\" class=\"btn\">Reset Password</a>\n" +
@@ -340,8 +354,8 @@ public class EmailServiceImpl implements EmailService {
                 "            </div>\n" +
                 "        </div>\n" +
                 "        <div class=\"footer\">\n" +
-                "            <p>You received this email because a password reset was requested for your account.</p>\n" +
-                "            <p>&copy; 2026 CarbonTrack. All rights reserved.</p>\n" +
+                "            <p>You received this email because a password reset was requested for your account on CarbonMitra.</p>\n" +
+                "            <p>&copy; 2026 CarbonMitra. All rights reserved.</p>\n" +
                 "        </div>\n" +
                 "    </div>\n" +
                 "</body>\n" +
@@ -351,48 +365,56 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public void sendStreakWarningEmail(User user) {
         String htmlContent = buildStreakWarningHtmlTemplate(user.getUsername());
+        String subject = "Don't lose your CarbonMitra streak! 🔥";
         MimeMessage message = mailSender.createMimeMessage();
         try {
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
             helper.setTo(user.getEmail());
-            helper.setSubject("Don't lose your CarbonTrack streak! 🔥");
+            helper.setSubject(subject);
             helper.setText(htmlContent, true);
-            helper.setFrom("no-reply@carbontrack.com");
+            helper.addInline("logo", new UrlResource(LOGO_URL));
+            helper.setFrom(fromEmail);
+            
             mailSender.send(message);
-            log.info("Streak warning email successfully sent to {}", user.getEmail());
+            log.info("Email sent successfully. Recipient: {}, Subject: '{}'", user.getEmail(), subject);
         } catch (Exception e) {
-            log.warn("Could not send streak warning email to {} via SMTP. Falling back to console log.", user.getEmail());
+            log.error("Email delivery failed. Recipient: {}, Subject: '{}'. Error/SMTP Exception: {}", 
+                      user.getEmail(), subject, e.getMessage(), e);
             log.info("\n" +
                     "========================================= HTML STREAK EMAIL =========================================\n" +
                     "To: {}\n" +
-                    "Subject: Don't lose your CarbonTrack streak! 🔥\n" +
+                    "Subject: {}\n" +
                     "Content:\n{}\n" +
                     "======================================================================================================", 
-                    user.getEmail(), htmlContent);
+                    user.getEmail(), subject, htmlContent);
         }
     }
 
     @Override
     public void sendWeeklyDigestEmail(User user, Double weeklyCo2, Double weeklyOffset, int badgesCount) {
         String htmlContent = buildWeeklyDigestHtmlTemplate(user.getUsername(), weeklyCo2, weeklyOffset, badgesCount);
+        String subject = "Your CarbonMitra Weekly Digest 🌿";
         MimeMessage message = mailSender.createMimeMessage();
         try {
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
             helper.setTo(user.getEmail());
-            helper.setSubject("Your CarbonTrack Weekly Digest 🌿");
+            helper.setSubject(subject);
             helper.setText(htmlContent, true);
-            helper.setFrom("no-reply@carbontrack.com");
+            helper.addInline("logo", new UrlResource(LOGO_URL));
+            helper.setFrom(fromEmail);
+            
             mailSender.send(message);
-            log.info("Weekly digest email successfully sent to {}", user.getEmail());
+            log.info("Email sent successfully. Recipient: {}, Subject: '{}'", user.getEmail(), subject);
         } catch (Exception e) {
-            log.warn("Could not send weekly digest email to {} via SMTP. Falling back to console log.", user.getEmail());
+            log.error("Email delivery failed. Recipient: {}, Subject: '{}'. Error/SMTP Exception: {}", 
+                      user.getEmail(), subject, e.getMessage(), e);
             log.info("\n" +
                     "========================================= HTML DIGEST EMAIL =========================================\n" +
                     "To: {}\n" +
-                    "Subject: Your CarbonTrack Weekly Digest 🌿\n" +
+                    "Subject: {}\n" +
                     "Content:\n{}\n" +
                     "======================================================================================================", 
-                    user.getEmail(), htmlContent);
+                    user.getEmail(), subject, htmlContent);
         }
     }
 
@@ -411,6 +433,9 @@ public class EmailServiceImpl implements EmailService {
                 "</head>\n" +
                 "<body>\n" +
                 "    <div class=\"card\">\n" +
+                "        <div style=\"text-align: center; margin-bottom: 10px;\">\n" +
+                "             <img src=\"" + LOGO_CID + "\" alt=\"CarbonMitra Logo\" style=\"height: 50px; width: auto;\" />\n" +
+                "        </div>\n" +
                 "        <div class=\"header\">Don't Lose Your Streak! 🔥</div>\n" +
                 "        <p>Hello " + username + ",</p>\n" +
                 "        <p>You logged your carbon activities yesterday, but you haven't logged any green choices today! To keep your daily tracking streak alive and continue unlocking special gamification badges, record an activity before midnight.</p>\n" +
@@ -419,7 +444,7 @@ public class EmailServiceImpl implements EmailService {
                 "        </div>\n" +
                 "        <p>Keep up the great work in helping make our Earth pollution-free!</p>\n" +
                 "        <div class=\"footer\">\n" +
-                "            <p>&copy; 2026 CarbonTrack. All rights reserved.</p>\n" +
+                "            <p>&copy; 2026 CarbonMitra. All rights reserved.</p>\n" +
                 "        </div>\n" +
                 "    </div>\n" +
                 "</body>\n" +
@@ -443,6 +468,9 @@ public class EmailServiceImpl implements EmailService {
                 "</head>\n" +
                 "<body>\n" +
                 "    <div class=\"card\">\n" +
+                "        <div style=\"text-align: center; margin-bottom: 10px;\">\n" +
+                "             <img src=\"" + LOGO_CID + "\" alt=\"CarbonMitra Logo\" style=\"height: 50px; width: auto;\" />\n" +
+                "        </div>\n" +
                 "        <div class=\"header\">Your Weekly Carbon Digest 🌿</div>\n" +
                 "        <p>Hello " + username + ",</p>\n" +
                 "        <p>Here is your sustainability summary for the past week. Thank you for logging your choices and contributing to a greener planet!</p>\n" +
@@ -459,10 +487,10 @@ public class EmailServiceImpl implements EmailService {
                 "        </div>\n" +
                 "        \n" +
                 "        <p>You also earned <strong>" + badges + "</strong> new badge(s) this week!</p>\n" +
-                "        <p>Keep logging and monitoring your footprint on CarbonTrack to hit your sustainability targets.</p>\n" +
+                "        <p>Keep logging and monitoring your footprint on CarbonMitra to hit your sustainability targets.</p>\n" +
                 "        \n" +
                 "        <div class=\"footer\">\n" +
-                "            <p>&copy; 2026 CarbonTrack. All rights reserved.</p>\n" +
+                "            <p>&copy; 2026 CarbonMitra. All rights reserved.</p>\n" +
                 "        </div>\n" +
                 "    </div>\n" +
                 "</body>\n" +

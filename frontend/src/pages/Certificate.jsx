@@ -69,8 +69,8 @@ const Certificate = () => {
 
   // Generate a unique Verification Hash based on user id and username
   const verificationHash = user 
-    ? `CT-${user.id}-${Math.abs(user.username.split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0)).toString(16).toUpperCase()}`
-    : 'CT-0000-0000';
+    ? `CM-${user.id}-${Math.abs(user.username.split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0)).toString(16).toUpperCase()}`
+    : 'CM-0000-0000';
 
   // Determine Badge Rank / Level
   let rankName = 'Eco-Novice';
@@ -169,8 +169,12 @@ const Certificate = () => {
             {/* Top Branding Section */}
             <div className="text-center space-y-1">
               <div className="flex justify-center items-center space-x-1.5 text-emerald-600 dark:text-emerald-400">
-                <span className="text-lg">🌱</span>
-                <span className="font-extrabold text-sm uppercase tracking-widest">CarbonTrack Global</span>
+                <img 
+                  src="https://res.cloudinary.com/dngurjsdw/image/upload/v1783233674/carbon_tracker_ojorhq.png" 
+                  alt="CarbonMitra Logo" 
+                  className="h-6 w-auto object-contain" 
+                />
+                <span className="font-extrabold text-sm uppercase tracking-widest">CarbonMitra Global</span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-serif font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">
                 Certificate of Environmental Contribution
@@ -191,7 +195,7 @@ const Certificate = () => {
               </div>
 
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-lg mx-auto leading-relaxed">
-                for outstanding commitment to environmental advocacy. Through active monitoring and carbon footprint logging on CarbonTrack, this citizen has logged and managed their emissions, contributing directly to a cleaner, pollution-free future.
+                for outstanding commitment to environmental advocacy. Through active monitoring and carbon footprint logging on CarbonMitra, this citizen has logged and managed their emissions, contributing directly to a cleaner, pollution-free future.
               </p>
             </div>
 
@@ -246,7 +250,7 @@ const Certificate = () => {
                   Committee Board
                 </div>
                 <div className="w-full h-px bg-slate-200 dark:border-dark-700/80 my-1"></div>
-                <p className="text-[8px] uppercase tracking-widest text-slate-400">CarbonTrack Global</p>
+                <p className="text-[8px] uppercase tracking-widest text-slate-400">CarbonMitra Global</p>
               </div>
             </div>
           </div>

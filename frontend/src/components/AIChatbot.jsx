@@ -113,7 +113,7 @@ const AIChatbot = () => {
               </div>
               <div>
                 <h3 className="font-extrabold text-sm tracking-wide">AI Eco-Assistant</h3>
-                <p className="text-[10px] text-emerald-200 font-semibold uppercase tracking-wider">CarbonTrack Helper</p>
+                <p className="text-[10px] text-emerald-200 font-semibold uppercase tracking-wider">CarbonMitra Helper</p>
               </div>
             </div>
             <button

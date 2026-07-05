@@ -30,7 +30,7 @@ public interface ActivityLogRepository extends JpaRepository<ActivityLog, Long> 
            "GROUP BY al.category")
     List<Object[]> sumCo2eByCategory(@Param("userId") Long userId, @Param("startDate") LocalDateTime startDate);
 
-    @Query("SELECT DATE(al.logDate) FROM ActivityLog al WHERE al.user.id = :userId AND al.logDate >= :startDate ORDER BY DATE(al.logDate) DESC")
+    @Query("SELECT CAST(al.logDate AS date) FROM ActivityLog al WHERE al.user.id = :userId AND al.logDate >= :startDate ORDER BY CAST(al.logDate AS date) DESC")
     List<java.sql.Date> findDistinctLogDatesFrom(@Param("userId") Long userId, @Param("startDate") LocalDateTime startDate);
 
     @Query("SELECT al.user.id as userId, " +

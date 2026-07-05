@@ -46,7 +46,7 @@
 - Welcome emails on registration.
 - Daily streak warnings and weekly carbon digests.
 - Password reset emails with secure tokens.
-- Brevo SMTP with graceful fallback logging.
+- Gmail SMTP with graceful fallback logging.
 
 ---
 
@@ -76,7 +76,7 @@
 | **Database** | MySQL 8 |
 | **Cache** | Redis (Upstash for production) |
 | **Auth** | JWT (Access + Refresh Tokens), Google OAuth2, BCrypt |
-| **Email** | Brevo SMTP (production), Console fallback (development) |
+| **Email** | Gmail SMTP (production), Console fallback (development) |
 | **AI** | Cohere Chat API |
 | **Maps** | OpenStreetMap + OSRM Routing + Nominatim Geocoding |
 | **Docs** | Swagger / OpenAPI 3 (SpringDoc) |
@@ -182,10 +182,8 @@ Open [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.ht
 | `JWT_SECRET` | 256-bit hex key for JWT signing |
 | `GOOGLE_CLIENT_ID` | Google OAuth2 Client ID |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth2 Client Secret |
-| `BREVO_SMTP_HOST` | Brevo SMTP server |
-| `BREVO_SMTP_PORT` | Brevo SMTP port |
-| `BREVO_SMTP_USERNAME` | Brevo SMTP username |
-| `BREVO_SMTP_PASSWORD` | Brevo SMTP password |
+| `SPRING_MAIL_USERNAME` | Gmail account address (e.g., your_email@gmail.com) |
+| `SPRING_MAIL_PASSWORD` | Google App Password (16 characters) |
 | `COHERE_API_KEY` | Cohere AI API key |
 | `FRONTEND_URL` | Frontend URL for CORS & OAuth redirect |
 | `VITE_API_URL` | Backend API URL (frontend) |
@@ -282,17 +280,19 @@ Full interactive docs: **Swagger UI** at `/swagger-ui.html`.
 1. Create a free Redis database at [Upstash](https://upstash.com).
 2. Copy the **host** and **port** into your environment variables.
 
-### Email → Brevo
+### Email → Gmail SMTP
 
-1. Sign up at [Brevo](https://www.brevo.com) (free tier: 300 emails/day).
-2. Go to **SMTP & API** settings.
-3. Copy your SMTP credentials into environment variables.
+1. Enable 2-Step Verification on your Google Account: [Google Sign-in Options](https://myaccount.google.com/signinoptions/two-step-verification).
+2. Go to [Google App Passwords](https://myaccount.google.com/apppasswords).
+3. Generate a new App Password (select 'Other' and name it `CarbonTrack`).
+4. Copy the generated 16-character password.
+5. Save it as `SPRING_MAIL_PASSWORD` in your environment variables, and save your email as `SPRING_MAIL_USERNAME`.
 
 ### Google OAuth → Production
 
 1. Go to [Google Cloud Console](https://console.cloud.google.com/apis/credentials).
 2. Update **Authorized JavaScript Origins** with your Render backend URL.
-3. Update **Authorized Redirect URIs** with: `https://your-backend.onrender.com/login/oauth2/code/google`
+3. Update **Authorized Redirect Redirect URIs** with: `https://your-backend.onrender.com/login/oauth2/code/google`
 
 ---
 

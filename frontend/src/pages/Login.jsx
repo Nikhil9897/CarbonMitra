@@ -30,9 +30,13 @@ const Login = () => {
 
       <div className="w-full max-w-md bg-white dark:bg-dark-900 shadow-xl border border-slate-100 dark:border-dark-800 rounded-3xl p-8 relative z-10">
         <div className="text-center mb-8">
-          <span className="text-4xl">🌱</span>
+          <img 
+            src="https://res.cloudinary.com/dngurjsdw/image/upload/v1783233674/carbon_tracker_ojorhq.png" 
+            alt="CarbonMitra Logo" 
+            className="h-12 w-auto mx-auto object-contain" 
+          />
           <h2 className="text-3xl font-extrabold mt-3 bg-gradient-to-r from-primary-600 to-emerald-500 bg-clip-text text-transparent">
-            Welcome to CarbonTrack
+            Welcome to CarbonMitra
           </h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
             Monitor and reduce your carbon footprint
