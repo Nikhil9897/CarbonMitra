@@ -75,7 +75,12 @@ app:
 # ── Server ───────────────────────────
 server:
   port: ${PORT:8080}
-  forward-headers-strategy: framework
+  forward-headers-strategy: native
+  tomcat:
+    remoteip:
+      remote-ip-header: x-forwarded-for
+      protocol-header: x-forwarded-proto
+      internal-proxies: .*
 
 # ── Springdoc / Swagger ──────────────
 springdoc:
