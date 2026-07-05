@@ -2,57 +2,110 @@ package com.carbontrack.service.impl;
 
 import com.carbontrack.entity.User;
 import com.carbontrack.service.EmailService;
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.UrlResource;
+import org.springframework.stereotype.Service;
+
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 
 @Service
 @Slf4j
 public class EmailServiceImpl implements EmailService {
 
-    private final JavaMailSender mailSender;
+    private final String apiKey;
     private final String fromEmail;
+    private final HttpClient httpClient;
     private static final String LOGO_URL = "https://res.cloudinary.com/dngurjsdw/image/upload/v1783233674/carbon_tracker_ojorhq.png";
-    private static final String LOGO_CID = "cid:logo";
+    // For Resend HTTP API, we use the public image URL directly inside the <img> src attribute
+    private static final String LOGO_CID = LOGO_URL;
 
-    public EmailServiceImpl(JavaMailSender mailSender,
-                            @Value("${spring.mail.username}") String fromEmail) {
-        this.mailSender = mailSender;
+    public EmailServiceImpl(@Value("${resend.api-key:}") String apiKey,
+                            @Value("${resend.from-email:onboarding@resend.dev}") String fromEmail) {
+        this.apiKey = apiKey;
         this.fromEmail = fromEmail;
-        log.info("EmailServiceImpl initialized — Gmail sender address='{}'", fromEmail);
+        this.httpClient = HttpClient.newHttpClient();
+        log.info("EmailServiceImpl initialized with Resend REST API. Sender: {}", fromEmail);
+    }
+
+    private void sendEmailViaResend(String to, String subject, String htmlContent) {
+        if (apiKey == null || apiKey.isBlank()) {
+            log.warn("Resend API Key is missing! Email not sent to {}. Logging content to console instead:", to);
+            logEmailFallback(to, subject, htmlContent);
+            return;
+        }
+
+        try {
+            // Escape quotes, newlines, and backslashes in HTML content for JSON body
+            String escapedHtml = htmlContent
+                    .replace("\\", "\\\\")
+                    .replace("\"", "\\\"")
+                    .replace("\n", "\\n")
+                    .replace("\r", "\\r");
+
+            String jsonBody = "{"
+                    + "\"from\":\"CarbonMitra <" + fromEmail + ">\","
+                    + "\"to\":[\"" + to + "\"],"
+                    + "\"subject\":\"" + subject + "\","
+                    + "\"html\":\"" + escapedHtml + "\""
+                    + "}";
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("https://api.resend.com/emails"))
+                    .header("Authorization", "Bearer " + apiKey)
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonBody, StandardCharsets.UTF_8))
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                log.info("Email sent successfully via Resend API to {}. Response: {}", to, response.body());
+            } else {
+                log.error("Failed to send email via Resend API to {}. Status: {}, Response: {}", to, response.statusCode(), response.body());
+                logEmailFallback(to, subject, htmlContent);
+            }
+        } catch (Exception e) {
+            log.error("Error sending email via Resend API to {}: {}", to, e.getMessage(), e);
+            logEmailFallback(to, subject, htmlContent);
+        }
+    }
+
+    private void logEmailFallback(String to, String subject, String htmlContent) {
+        log.info("\n" +
+                "========================================= FALLBACK HTML EMAIL =========================================\n" +
+                "To: {}\n" +
+                "Subject: {}\n" +
+                "Content:\n{}\n" +
+                "======================================================================================================",
+                to, subject, htmlContent);
     }
 
     @Override
     public void sendWelcomeEmail(User user) {
         String htmlContent = buildWelcomeHtmlTemplate(user.getUsername());
-        String subject = "Welcome to CarbonMitra! 🌍";
-        MimeMessage message = mailSender.createMimeMessage();
-        try {
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setTo(user.getEmail());
-            helper.setSubject(subject);
-            helper.setText(htmlContent, true);
-            helper.addInline("logo", new UrlResource(LOGO_URL));
-            helper.setFrom(fromEmail);
-            
-            mailSender.send(message);
-            log.info("Email sent successfully. Recipient: {}, Subject: '{}'", user.getEmail(), subject);
-        } catch (Exception e) {
-            log.error("Email delivery failed. Recipient: {}, Subject: '{}'. Error/SMTP Exception: {}", 
-                      user.getEmail(), subject, e.getMessage(), e);
-            log.info("\n" +
-                    "========================================= HTML WELCOME EMAIL =========================================\n" +
-                    "To: {}\n" +
-                    "Subject: {}\n" +
-                    "Content:\n{}\n" +
-                    "======================================================================================================", 
-                    user.getEmail(), subject, htmlContent);
-        }
+        sendEmailViaResend(user.getEmail(), "Welcome to CarbonMitra! 🌍", htmlContent);
+    }
+
+    @Override
+    public void sendPasswordResetEmail(User user, String token) {
+        String htmlContent = buildPasswordResetHtmlTemplate(user.getUsername(), token);
+        sendEmailViaResend(user.getEmail(), "Reset Your CarbonMitra Password 🔑", htmlContent);
+    }
+
+    @Override
+    public void sendStreakWarningEmail(User user) {
+        String htmlContent = buildStreakWarningHtmlTemplate(user.getUsername());
+        sendEmailViaResend(user.getEmail(), "Don't lose your CarbonMitra streak! 🔥", htmlContent);
+    }
+
+    @Override
+    public void sendWeeklyDigestEmail(User user, Double weeklyCo2, Double weeklyOffset, int badgesCount) {
+        String htmlContent = buildWeeklyDigestHtmlTemplate(user.getUsername(), weeklyCo2, weeklyOffset, badgesCount);
+        sendEmailViaResend(user.getEmail(), "Your CarbonMitra Weekly Digest 🌿", htmlContent);
     }
 
     private String buildWelcomeHtmlTemplate(String username) {
@@ -218,34 +271,6 @@ public class EmailServiceImpl implements EmailService {
                 "</html>";
     }
 
-    @Override
-    public void sendPasswordResetEmail(User user, String token) {
-        String htmlContent = buildPasswordResetHtmlTemplate(user.getUsername(), token);
-        String subject = "Reset Your CarbonMitra Password 🔑";
-        MimeMessage message = mailSender.createMimeMessage();
-        try {
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setTo(user.getEmail());
-            helper.setSubject(subject);
-            helper.setText(htmlContent, true);
-            helper.addInline("logo", new UrlResource(LOGO_URL));
-            helper.setFrom(fromEmail);
-            
-            mailSender.send(message);
-            log.info("Email sent successfully. Recipient: {}, Subject: '{}'", user.getEmail(), subject);
-        } catch (Exception e) {
-            log.error("Email delivery failed. Recipient: {}, Subject: '{}'. Error/SMTP Exception: {}", 
-                      user.getEmail(), subject, e.getMessage(), e);
-            log.info("\n" +
-                    "========================================= HTML RESET PASSWORD EMAIL =========================================\n" +
-                    "To: {}\n" +
-                    "Subject: {}\n" +
-                    "Content:\n{}\n" +
-                    "=============================================================================================================", 
-                    user.getEmail(), subject, htmlContent);
-        }
-    }
-
     private String buildPasswordResetHtmlTemplate(String username, String token) {
         String resetUrl = "http://localhost:5173/reset-password?token=" + token;
         return "<!DOCTYPE html>\n" +
@@ -360,62 +385,6 @@ public class EmailServiceImpl implements EmailService {
                 "    </div>\n" +
                 "</body>\n" +
                 "</html>";
-    }
-
-    @Override
-    public void sendStreakWarningEmail(User user) {
-        String htmlContent = buildStreakWarningHtmlTemplate(user.getUsername());
-        String subject = "Don't lose your CarbonMitra streak! 🔥";
-        MimeMessage message = mailSender.createMimeMessage();
-        try {
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setTo(user.getEmail());
-            helper.setSubject(subject);
-            helper.setText(htmlContent, true);
-            helper.addInline("logo", new UrlResource(LOGO_URL));
-            helper.setFrom(fromEmail);
-            
-            mailSender.send(message);
-            log.info("Email sent successfully. Recipient: {}, Subject: '{}'", user.getEmail(), subject);
-        } catch (Exception e) {
-            log.error("Email delivery failed. Recipient: {}, Subject: '{}'. Error/SMTP Exception: {}", 
-                      user.getEmail(), subject, e.getMessage(), e);
-            log.info("\n" +
-                    "========================================= HTML STREAK EMAIL =========================================\n" +
-                    "To: {}\n" +
-                    "Subject: {}\n" +
-                    "Content:\n{}\n" +
-                    "======================================================================================================", 
-                    user.getEmail(), subject, htmlContent);
-        }
-    }
-
-    @Override
-    public void sendWeeklyDigestEmail(User user, Double weeklyCo2, Double weeklyOffset, int badgesCount) {
-        String htmlContent = buildWeeklyDigestHtmlTemplate(user.getUsername(), weeklyCo2, weeklyOffset, badgesCount);
-        String subject = "Your CarbonMitra Weekly Digest 🌿";
-        MimeMessage message = mailSender.createMimeMessage();
-        try {
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setTo(user.getEmail());
-            helper.setSubject(subject);
-            helper.setText(htmlContent, true);
-            helper.addInline("logo", new UrlResource(LOGO_URL));
-            helper.setFrom(fromEmail);
-            
-            mailSender.send(message);
-            log.info("Email sent successfully. Recipient: {}, Subject: '{}'", user.getEmail(), subject);
-        } catch (Exception e) {
-            log.error("Email delivery failed. Recipient: {}, Subject: '{}'. Error/SMTP Exception: {}", 
-                      user.getEmail(), subject, e.getMessage(), e);
-            log.info("\n" +
-                    "========================================= HTML DIGEST EMAIL =========================================\n" +
-                    "To: {}\n" +
-                    "Subject: {}\n" +
-                    "Content:\n{}\n" +
-                    "======================================================================================================", 
-                    user.getEmail(), subject, htmlContent);
-        }
     }
 
     private String buildStreakWarningHtmlTemplate(String username) {

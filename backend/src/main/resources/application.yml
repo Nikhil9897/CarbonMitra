@@ -2,21 +2,10 @@ spring:
   application:
     name: carbontrack
 
-  # ── Brevo SMTP Mail ─────────────────
-  mail:
-    host: smtp-relay.brevo.com
-    port: 587
-    username: ${SPRING_MAIL_USERNAME}
-    password: ${SPRING_MAIL_PASSWORD}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-          connectiontimeout: 5000
-          timeout: 5000
-          writetimeout: 5000
+# ── Resend Email Configuration ──────
+resend:
+  api-key: ${RESEND_API_KEY:}
+  from-email: ${RESEND_FROM_EMAIL:onboarding@resend.dev}
 
   # ── PostgreSQL Datasource ─────────
   datasource:
