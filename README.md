@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="https://img.icons8.com/color/96/earth-planet.png" alt="CarbonTrack Logo" width="80" />
+  <img src="https://res.cloudinary.com/dngurjsdw/image/upload/v1783233674/carbon_tracker_ojorhq.png" alt="CarbonMitra Logo" width="80" />
 </p>
 
-<h1 align="center">🌍 CarbonTrack</h1>
+<h1 align="center">🌍 CarbonMitra</h1>
 <p align="center"><strong>Full-Stack Sustainability Analytics Platform</strong></p>
 
 <p align="center">
@@ -145,7 +145,7 @@ Edit `backend/.env` and fill in your actual values.
 
 ### 3. Create MySQL Database
 ```sql
-CREATE DATABASE carbontrack;
+CREATE DATABASE carbonmitra;
 ```
 
 ### 4. Run Backend
@@ -252,8 +252,9 @@ Full interactive docs: **Swagger UI** at `/swagger-ui.html`.
 2. Create a **Web Service** on [Render](https://render.com).
 3. Connect your GitHub repository.
 4. Configure:
-   - **Build Command**: `cd backend && mvn clean package -DskipTests`
-   - **Start Command**: `cd backend && java -jar target/carbontrack-backend-0.0.1-SNAPSHOT.jar`
+   - **Root Directory**: `backend`
+   - **Build Command**: `mvn clean package -DskipTests`
+   - **Start Command**: `java -jar target/carbontrack-backend-0.0.1-SNAPSHOT.jar`
    - **Environment**: `Java 17`
 5. Add all environment variables from `.env.example` in Render's Environment tab.
 6. Render auto-detects the `PORT` variable and assigns it.
@@ -284,7 +285,7 @@ Full interactive docs: **Swagger UI** at `/swagger-ui.html`.
 
 1. Enable 2-Step Verification on your Google Account: [Google Sign-in Options](https://myaccount.google.com/signinoptions/two-step-verification).
 2. Go to [Google App Passwords](https://myaccount.google.com/apppasswords).
-3. Generate a new App Password (select 'Other' and name it `CarbonTrack`).
+3. Generate a new App Password (select 'Other' and name it `CarbonMitra`).
 4. Copy the generated 16-character password.
 5. Save it as `SPRING_MAIL_PASSWORD` in your environment variables, and save your email as `SPRING_MAIL_USERNAME`.
 
