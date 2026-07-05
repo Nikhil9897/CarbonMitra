@@ -18,17 +18,20 @@ public class EmailServiceImpl implements EmailService {
 
     private final String apiKey;
     private final String fromEmail;
+    private final String frontendUrl;
     private final HttpClient httpClient;
     private static final String LOGO_URL = "https://res.cloudinary.com/dngurjsdw/image/upload/v1783233674/carbon_tracker_ojorhq.png";
     // For Resend HTTP API, we use the public image URL directly inside the <img> src attribute
     private static final String LOGO_CID = LOGO_URL;
 
     public EmailServiceImpl(@Value("${resend.api-key:}") String apiKey,
-                            @Value("${resend.from-email:onboarding@resend.dev}") String fromEmail) {
+                            @Value("${resend.from-email:onboarding@resend.dev}") String fromEmail,
+                            @Value("${app.frontend-url:http://localhost:5173}") String frontendUrl) {
         this.apiKey = apiKey;
         this.fromEmail = fromEmail;
+        this.frontendUrl = frontendUrl;
         this.httpClient = HttpClient.newHttpClient();
-        log.info("EmailServiceImpl initialized with Resend REST API. Sender: {}", fromEmail);
+        log.info("EmailServiceImpl initialized with Resend REST API. Sender: {}. Frontend: {}", fromEmail, frontendUrl);
     }
 
     private void sendEmailViaResend(String to, String subject, String htmlContent) {
@@ -259,7 +262,7 @@ public class EmailServiceImpl implements EmailService {
                 "            </div>\n" +
                 "            \n" +
                 "            <div class=\"btn-container\">\n" +
-                "                <a href=\"http://localhost:5173\" class=\"btn\">Go to Dashboard</a>\n" +
+                "                <a href=\"" + frontendUrl + "\" class=\"btn\">Go to Dashboard</a>\n" +
                 "            </div>\n" +
                 "        </div>\n" +
                 "        <div class=\"footer\">\n" +
@@ -272,7 +275,7 @@ public class EmailServiceImpl implements EmailService {
     }
 
     private String buildPasswordResetHtmlTemplate(String username, String token) {
-        String resetUrl = "http://localhost:5173/reset-password?token=" + token;
+        String resetUrl = frontendUrl + "/reset-password?token=" + token;
         return "<!DOCTYPE html>\n" +
                 "<html>\n" +
                 "<head>\n" +
@@ -409,7 +412,7 @@ public class EmailServiceImpl implements EmailService {
                 "        <p>Hello " + username + ",</p>\n" +
                 "        <p>You logged your carbon activities yesterday, but you haven't logged any green choices today! To keep your daily tracking streak alive and continue unlocking special gamification badges, record an activity before midnight.</p>\n" +
                 "        <div class=\"btn-container\">\n" +
-                "            <a href=\"http://localhost:5173/log-activity\" class=\"btn\">Log Activity Now</a>\n" +
+                "            <a href=\"" + frontendUrl + "/log-activity\" class=\"btn\">Log Activity Now</a>\n" +
                 "        </div>\n" +
                 "        <p>Keep up the great work in helping make our Earth pollution-free!</p>\n" +
                 "        <div class=\"footer\">\n" +

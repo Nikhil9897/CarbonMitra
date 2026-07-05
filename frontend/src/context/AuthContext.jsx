@@ -82,8 +82,9 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
+    sessionStorage.clear();
     setUser(null);
-    toast.info('Logged out successfully');
+    toast.success('Logged out successfully.');
   }, []);
 
   const fetchUserProfile = useCallback(async () => {

@@ -337,7 +337,7 @@ This project is licensed under the **MIT License**. See [LICENSE](LICENSE) for d
 **Milind Verma**
 
 [![GitHub](https://img.shields.io/badge/GitHub-Milindverma24-181717?style=for-the-badge&logo=github)](https://github.com/Milindverma24)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?style=for-the-badge&logo=linkedin)](https://linkedin.com/in/milindverma)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?style=for-the-badge&logo=linkedin)](https://www.linkedin.com/in/milind-verma-8aa10a308/)
 
 ---
 

@@ -4,23 +4,23 @@
 
 @layer base {
   body {
-    @apply font-sans antialiased selection:bg-primary-500 selection:text-white;
+    background-color: #F8FCF8;
+    color: #1C2B22;
+    @apply font-sans antialiased;
+  }
+
+  ::selection {
+    background-color: rgba(129, 199, 132, 0.3);
+    color: #1C2B22;
   }
 }
 
-/* Glassmorphism custom classes */
+/* Glassmorphism custom classes matching the eco palette */
 .glass {
-  background: rgba(255, 255, 255, 0.45);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-}
-
-.dark .glass {
-  background: rgba(15, 23, 42, 0.45);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid #E5F3E7;
 }
 
 /* Custom Scrollbars */
@@ -30,20 +30,25 @@
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-transparent;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-200 dark:bg-dark-800 rounded-full hover:bg-slate-300 dark:hover:bg-dark-700;
+  background: #E5F3E7;
+  border-radius: 99px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #81C784;
 }
 
 /* Micro-animations */
 @keyframes pulseGlow {
   0%, 100% {
-    opacity: 0.15;
+    opacity: 0.1;
   }
   50% {
-    opacity: 0.3;
+    opacity: 0.2;
   }
 }
 
@@ -59,7 +64,7 @@
   right: 0;
   bottom: 0;
   border-radius: inherit;
-  box-shadow: 0 0 40px rgba(34, 197, 94, 0.2);
+  box-shadow: 0 0 40px rgba(76, 175, 80, 0.25);
   z-index: -1;
   animation: pulseGlow 6s ease-in-out infinite;
   pointer-events: none;

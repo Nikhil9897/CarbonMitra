@@ -1,45 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import AIChatbot from './AIChatbot';
 import { 
   LayoutDashboard, 
   Activity, 
   Target, 
   Trophy, 
   BarChart3, 
-  Users, 
   User, 
-  LogOut, 
+  Award, 
+  Map, 
+  Building2, 
+  Lock, 
   Menu, 
   X, 
-  Sun, 
-  Moon, 
-  Building2,
-  Lock,
-  Award,
-  Map
+  LogOut 
 } from 'lucide-react';
+import AIChatbot from './AIChatbot';
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(() => {
-    return localStorage.getItem('theme') === 'dark' || 
-      (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  });
-
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [darkMode]);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const navigationItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
@@ -61,18 +46,28 @@ const Layout = ({ children }) => {
   }
 
   const handleLogout = () => {
-    logout();
-    navigate('/login');
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
+    setShowLogoutConfirm(false);
+    setLoggingOut(true);
+    setTimeout(() => {
+      logout();
+      setLoggingOut(false);
+      navigate('/', { replace: true });
+    }, 1000);
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 dark:bg-dark-950 dark:text-slate-100 flex flex-col transition-colors duration-200">
+    <div className="min-h-screen bg-bgEco text-textEco flex flex-col font-sans transition-colors duration-200">
       {/* Top Navbar */}
-      <header className="sticky top-0 z-40 bg-white/80 dark:bg-dark-900/80 backdrop-blur-md border-b border-slate-100 dark:border-dark-800 px-4 py-3 flex justify-between items-center">
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-borderEco px-4 py-3 flex justify-between items-center shadow-sm">
         <div className="flex items-center space-x-3">
           <button 
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="md:hidden p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-dark-800"
+            className="md:hidden p-1.5 rounded-lg hover:bg-emerald-50 text-slate-700 transition"
+            aria-label="Toggle Menu"
           >
             {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
@@ -82,32 +77,24 @@ const Layout = ({ children }) => {
               alt="CarbonMitra Logo" 
               className="h-8 w-auto object-contain" 
             />
-            <span className="font-extrabold text-xl bg-gradient-to-r from-primary-600 to-emerald-500 bg-clip-text text-transparent">
+            <span className="font-extrabold text-xl bg-gradient-to-r from-primary-600 to-emerald-500 bg-clip-text text-transparent tracking-tight">
               CarbonMitra
             </span>
           </Link>
         </div>
 
         <div className="flex items-center space-x-4">
-          {/* Dark Mode Toggle */}
-          <button 
-            onClick={() => setDarkMode(!darkMode)}
-            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-dark-800 text-slate-500 dark:text-slate-400 transition"
-          >
-            {darkMode ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
-
           {/* User Profile Summary */}
           <div className="hidden sm:flex flex-col text-right">
-            <span className="font-semibold text-sm text-slate-700 dark:text-slate-200">{user?.username}</span>
-            <span className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider font-bold">
+            <span className="font-bold text-sm text-slate-800">{user?.username}</span>
+            <span className="text-[10px] text-emerald-600 uppercase tracking-widest font-black">
               {user?.role?.replace('ROLE_', '').replace('_', ' ')}
             </span>
           </div>
 
           <button 
             onClick={handleLogout}
-            className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-red-500 transition"
+            className="p-2 rounded-lg hover:bg-red-50 text-red-500 transition-colors"
             title="Log Out"
           >
             <LogOut size={18} />
@@ -118,9 +105,9 @@ const Layout = ({ children }) => {
       <div className="flex flex-1 relative">
         {/* Sidebar Navigation */}
         <aside className={`
-          fixed md:sticky top-[57px] left-0 z-30
+          fixed md:sticky top-[57px] left-0 z-35
           w-64 h-[calc(100vh-57px)]
-          bg-white dark:bg-dark-900 border-r border-slate-100 dark:border-dark-800
+          bg-white border-r border-borderEco
           transition-transform duration-300 ease-in-out
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         `}>
@@ -135,10 +122,10 @@ const Layout = ({ children }) => {
                     to={item.path}
                     onClick={() => setSidebarOpen(false)}
                     className={`
-                      flex items-center space-x-3 px-4 py-3 rounded-xl font-medium text-sm transition
+                      flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-200
                       ${isActive 
-                        ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20 dark:shadow-primary-500/10' 
-                        : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-dark-800/50'}
+                        ? 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white shadow-md shadow-primary-500/15' 
+                        : 'text-slate-600 hover:bg-emerald-50/50 hover:text-primary-700'}
                     `}
                   >
                     <Icon size={18} />
@@ -149,8 +136,8 @@ const Layout = ({ children }) => {
             </div>
 
             {/* Footer inside Sidebar for Desktop */}
-            <div className="pt-4 border-t border-slate-100 dark:border-dark-800 text-center">
-              <p className="text-[11px] text-slate-400 dark:text-slate-600">
+            <div className="pt-4 border-t border-borderEco text-center">
+              <p className="text-[11px] text-slate-400 font-semibold tracking-wider uppercase">
                 CarbonMitra © 2026<br />Empowering Net Zero
               </p>
             </div>
@@ -161,16 +148,55 @@ const Layout = ({ children }) => {
         {sidebarOpen && (
           <div 
             onClick={() => setSidebarOpen(false)}
-            className="fixed inset-0 z-20 bg-slate-900/40 backdrop-blur-sm md:hidden"
+            className="fixed inset-0 z-20 bg-slate-900/30 backdrop-blur-sm md:hidden"
           ></div>
         )}
 
         {/* Main Content Area */}
-        <main className="flex-1 p-4 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
+        <main className="flex-1 p-4 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full relative z-10">
           {children}
         </main>
         <AIChatbot />
       </div>
+
+      {/* Logout Confirmation Dialog (Modal) */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+          <div className="bg-white border border-borderEco rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl text-center">
+            <div className="w-14 h-14 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-100">
+              <LogOut size={24} />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900">Confirm Logout</h3>
+            <p className="text-slate-500 text-sm mt-2 leading-relaxed">
+              Are you sure you want to logout?
+            </p>
+            <div className="flex space-x-3 mt-6">
+              <button
+                type="button"
+                onClick={() => setShowLogoutConfirm(false)}
+                className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmLogout}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold shadow-md transition"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Loading Spinner during logout processing */}
+      {loggingOut && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/40 backdrop-blur-md">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mb-4"></div>
+          <p className="text-slate-200 font-mono text-sm tracking-widest uppercase">Processing Logout...</p>
+        </div>
+      )}
     </div>
   );
 };

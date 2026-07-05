@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import api from '../services/api';
 import { toast } from 'react-toastify';
 import { MapPin, Navigation, Compass, AlertCircle, CheckCircle, RefreshCw, Eye } from 'lucide-react';
+import BackButton from '../components/BackButton';
 
 const RoutePlanner = () => {
   const [fromLoc, setFromLoc] = useState('');
@@ -13,7 +14,6 @@ const RoutePlanner = () => {
   const [routeDetails, setRouteDetails] = useState(null);
   const [carbonResult, setCarbonResult] = useState(null);
 
-  // Leaflet map setup states
   const [mapLoaded, setMapLoaded] = useState(false);
   const mapRef = useRef(null);
   const routeLayerRef = useRef(null);
@@ -28,7 +28,6 @@ const RoutePlanner = () => {
     { value: 'WALK', label: 'Bicycle / Walking 🚲' }
   ];
 
-  // Initialize Map
   useEffect(() => {
     if (window.L && !mapRef.current) {
       const L = window.L;
@@ -48,7 +47,6 @@ const RoutePlanner = () => {
     };
   }, []);
 
-  // Recalculate carbon dynamically if the user changes the vehicle *after* running a search
   useEffect(() => {
     if (routeDetails) {
       const factors = {
@@ -73,7 +71,6 @@ const RoutePlanner = () => {
 
     setSearching(true);
     try {
-      // 1. Geocode Origin Address
       const fromUrl = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(fromLoc)}`;
       const fromRes = await fetch(fromUrl);
       const fromData = await fromRes.json();
@@ -88,7 +85,6 @@ const RoutePlanner = () => {
         name: fromData[0].display_name
       };
 
-      // 2. Geocode Destination Address
       const toUrl = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(toLoc)}`;
       const toRes = await fetch(toUrl);
       const toData = await toRes.json();
@@ -103,7 +99,6 @@ const RoutePlanner = () => {
         name: toData[0].display_name
       };
 
-      // 3. Fetch OSRM Routing API (Shortest Path)
       const routeUrl = `https://router.project-osrm.org/route/v1/driving/${startCoord.lon},${startCoord.lat};${endCoord.lon},${endCoord.lat}?overview=full&geometries=geojson`;
       const routeRes = await fetch(routeUrl);
       const routeData = await routeRes.json();
@@ -115,8 +110,8 @@ const RoutePlanner = () => {
       }
 
       const route = routeData.routes[0];
-      const distance = route.distance / 1000; // convert meters to km
-      const duration = route.duration / 60; // convert seconds to minutes
+      const distance = route.distance / 1000; 
+      const duration = route.duration / 60; 
 
       setRouteDetails({
         distance: parseFloat(distance.toFixed(1)),
@@ -125,22 +120,18 @@ const RoutePlanner = () => {
         endName: endCoord.name
       });
 
-      // Update Map View
       if (mapRef.current && window.L) {
         const L = window.L;
         const map = mapRef.current;
         map.invalidateSize();
 
-        // Clean previous markers
         markersRef.current.forEach(m => map.removeLayer(m));
         markersRef.current = [];
 
-        // Clean previous path line
         if (routeLayerRef.current) {
           map.removeLayer(routeLayerRef.current);
         }
 
-        // Add Origin/Destination Markers
         const startMarker = L.marker([startCoord.lat, startCoord.lon]).addTo(map)
           .bindPopup(`<b>Start:</b> ${fromLoc}`);
         const endMarker = L.marker([endCoord.lat, endCoord.lon]).addTo(map)
@@ -148,14 +139,11 @@ const RoutePlanner = () => {
 
         markersRef.current.push(startMarker, endMarker);
 
-        // Convert coordinates from GeoJSON ([lng, lat]) to Leaflet ([lat, lng])
         const latLngs = route.geometry.coordinates.map(coord => [coord[1], coord[0]]);
 
-        // Draw routing polyline
-        const polyline = L.polyline(latLngs, { color: '#10b981', weight: 6, opacity: 0.85 }).addTo(map);
+        const polyline = L.polyline(latLngs, { color: '#2E7D32', weight: 6, opacity: 0.85 }).addTo(map);
         routeLayerRef.current = polyline;
 
-        // Adjust bounds
         map.fitBounds(polyline.getBounds(), { padding: [40, 40] });
       }
 
@@ -195,7 +183,6 @@ const RoutePlanner = () => {
     }
   };
 
-  // Alternative comparisons based on selections
   const getAlternates = () => {
     if (!routeDetails) return [];
     const factors = {
@@ -234,224 +221,226 @@ const RoutePlanner = () => {
   const alternates = getAlternates();
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-extrabold tracking-tight flex items-center space-x-2">
-          <Navigation className="text-primary-500 animate-pulse" />
-          <span>Interactive Route Carbon Planner</span>
-        </h1>
-        <p className="text-slate-500 dark:text-slate-400">
-          Search for the shortest route, visualize it on Leaflet, estimate vehicle emissions, and discover ecological alternatives.
-        </p>
-      </div>
+    <>
+      <BackButton />
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight flex items-center space-x-2 text-slate-800 uppercase">
+            <Navigation className="text-primary-500 animate-pulse" />
+            <span>Route Carbon Planner</span>
+          </h1>
+          <p className="text-slate-500 text-sm font-medium mt-1">
+            Search for the shortest route, visualize it on Leaflet, estimate vehicle emissions, and discover ecological alternatives.
+          </p>
+        </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Side: Controls & Analytics */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* SEARCH CARD */}
-          <div className="bg-white dark:bg-dark-900 border border-slate-100 dark:border-dark-800 p-6 rounded-3xl">
-            <h2 className="text-lg font-bold mb-4 flex items-center space-x-2">
-              <Compass size={18} className="text-primary-500" />
-              <span>Route Plan</span>
-            </h2>
-            <form onSubmit={handleSearch} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">
-                  Origin (From)
-                </label>
-                <input
-                  type="text"
-                  value={fromLoc}
-                  onChange={(e) => setFromLoc(e.target.value)}
-                  placeholder="e.g. New York or Paris"
-                  className="w-full px-4 py-2.5 rounded-xl border bg-slate-50 dark:bg-dark-800 border-slate-200 dark:border-dark-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-slate-100"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">
-                  Destination (To)
-                </label>
-                <input
-                  type="text"
-                  value={toLoc}
-                  onChange={(e) => setToLoc(e.target.value)}
-                  placeholder="e.g. Boston or Rome"
-                  className="w-full px-4 py-2.5 rounded-xl border bg-slate-50 dark:bg-dark-800 border-slate-200 dark:border-dark-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-slate-100"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">
-                  Primary Vehicle
-                </label>
-                <select
-                  value={vehicleType}
-                  onChange={(e) => setVehicleType(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border bg-slate-50 dark:bg-dark-800 border-slate-200 dark:border-dark-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-slate-100"
-                >
-                  {vehicles.map(v => (
-                    <option key={v.value} value={v.value}>{v.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              <button
-                type="submit"
-                disabled={searching}
-                className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 rounded-xl shadow-lg shadow-primary-600/20 transition duration-150 flex items-center justify-center space-x-2 text-sm"
-              >
-                {searching ? (
-                  <>
-                    <RefreshCw size={16} className="animate-spin" />
-                    <span>Mapping Route...</span>
-                  </>
-                ) : (
-                  <span>Calculate Shortest Route</span>
-                )}
-              </button>
-            </form>
-          </div>
-
-          {/* DYNAMIC RESULTS ANALYTICS */}
-          {routeDetails && (
-            <div className="bg-white dark:bg-dark-900 border border-slate-100 dark:border-dark-800 p-6 rounded-3xl space-y-4">
-              <h3 className="text-base font-extrabold text-slate-800 dark:text-slate-200 border-b border-slate-50 dark:border-dark-800/60 pb-2">
-                Trip Emission Analysis
-              </h3>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-slate-50 dark:bg-dark-800/40 p-3 rounded-2xl text-center">
-                  <span className="text-[10px] uppercase font-bold text-slate-400">Distance</span>
-                  <p className="text-xl font-black text-slate-800 dark:text-slate-100 mt-1">
-                    {routeDetails.distance} <span className="text-xs font-semibold">km</span>
-                  </p>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Side: Controls & Analytics */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* SEARCH CARD */}
+            <div className="bg-white border border-borderEco p-6 rounded-3xl shadow-sm">
+              <h2 className="text-lg font-bold mb-4 flex items-center space-x-2 text-slate-800">
+                <Compass size={18} className="text-primary-500" />
+                <span>Route Plan</span>
+              </h2>
+              <form onSubmit={handleSearch} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase text-slate-500 mb-1">
+                    Origin (From)
+                  </label>
+                  <input
+                    type="text"
+                    value={fromLoc}
+                    onChange={(e) => setFromLoc(e.target.value)}
+                    placeholder="e.g. New York or Paris"
+                    className="w-full px-4 py-2.5 rounded-xl border bg-bgEco border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-textEco"
+                  />
                 </div>
-                <div className="bg-slate-50 dark:bg-dark-800/40 p-3 rounded-2xl text-center">
-                  <span className="text-[10px] uppercase font-bold text-slate-400">Duration</span>
-                  <p className="text-xl font-black text-slate-800 dark:text-slate-100 mt-1">
-                    {routeDetails.duration} <span className="text-xs font-semibold">min</span>
-                  </p>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase text-slate-500 mb-1">
+                    Destination (To)
+                  </label>
+                  <input
+                    type="text"
+                    value={toLoc}
+                    onChange={(e) => setToLoc(e.target.value)}
+                    placeholder="e.g. Boston or Rome"
+                    className="w-full px-4 py-2.5 rounded-xl border bg-bgEco border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-textEco"
+                  />
                 </div>
-              </div>
 
-              {/* Total Carbon footprint box */}
-              <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-2xl text-center">
-                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">
-                  Calculated Carbon Footprint
-                </span>
-                <p className="text-3xl font-black text-slate-800 dark:text-slate-100 mt-1">
-                  {carbonResult} <span className="text-sm font-semibold">kg CO₂e</span>
-                </p>
-              </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase text-slate-500 mb-1">
+                    Primary Vehicle
+                  </label>
+                  <select
+                    value={vehicleType}
+                    onChange={(e) => setVehicleType(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl border bg-bgEco border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-textEco"
+                  >
+                    {vehicles.map(v => (
+                      <option key={v.value} value={v.value}>{v.label}</option>
+                    ))}
+                  </select>
+                </div>
 
-              {/* Log Activity Button */}
-              {vehicleType !== 'WALK' && (
                 <button
-                  onClick={handleLogActivity}
-                  disabled={logging}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-xl shadow-md transition duration-150 flex items-center justify-center space-x-2 text-sm"
+                  type="submit"
+                  disabled={searching}
+                  className="w-full bg-gradient-to-r from-primary-600 to-secondary-500 text-white font-bold py-3 rounded-xl shadow-md hover:scale-[1.02] active:scale-98 transition duration-200 flex items-center justify-center space-x-2 text-sm"
                 >
-                  {logging ? (
+                  {searching ? (
                     <>
                       <RefreshCw size={16} className="animate-spin" />
-                      <span>Logging...</span>
+                      <span>Mapping Route...</span>
                     </>
                   ) : (
-                    <>
-                      <CheckCircle size={16} />
-                      <span>Log this journey in activities</span>
-                    </>
+                    <span>Calculate Shortest Route</span>
                   )}
                 </button>
-              )}
+              </form>
             </div>
-          )}
-        </div>
 
-        {/* Right Side: Leaflet Map & Eco-Alternatives comparisons */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* LEAFLET MAP ELEMENT */}
-          <div className="bg-white dark:bg-dark-900 border border-slate-100 dark:border-dark-800 p-4 rounded-3xl relative">
-            {!mapLoaded && (
-              <div className="absolute inset-0 z-10 bg-slate-50 dark:bg-dark-950 flex items-center justify-center rounded-3xl">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
-              </div>
-            )}
-            <div 
-              id="route-map" 
-              className="w-full h-[400px] rounded-2xl z-0"
-              style={{ border: '1px solid rgba(16, 185, 129, 0.15)' }}
-            />
-          </div>
-
-          {/* ALTERNATIVE VEHICLE SAVINGS COMPARISONS */}
-          {routeDetails && (
-            <div className="bg-white dark:bg-dark-900 border border-slate-100 dark:border-dark-800 p-6 rounded-3xl space-y-6">
-              <div>
-                <h3 className="text-lg font-bold flex items-center space-x-2">
-                  <Eye size={18} className="text-emerald-500" />
-                  <span>How to Save Emission on this route</span>
+            {/* DYNAMIC RESULTS ANALYTICS */}
+            {routeDetails && (
+              <div className="bg-white border border-borderEco p-6 rounded-3xl space-y-4 shadow-sm">
+                <h3 className="text-base font-extrabold text-slate-800 border-b border-slate-50 pb-2">
+                  Trip Emission Analysis
                 </h3>
-                <p className="text-xs text-slate-400 mt-1">Compare alternate modes of transit and see how much CO₂ you could prevent from being released.</p>
-              </div>
-
-              {/* Grid of comparisons */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {alternates.map((alt, idx) => (
-                  <div 
-                    key={idx} 
-                    className={`p-4 rounded-2xl border transition duration-300 flex flex-col justify-between
-                      ${alt.savings > 0 
-                        ? 'bg-emerald-500/5 border-emerald-100 dark:border-emerald-950/40 text-emerald-800 dark:text-emerald-400' 
-                        : 'bg-red-500/5 border-red-100 dark:border-red-950/40 text-red-800 dark:text-red-400'
-                      }`}
-                  >
-                    <div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider block opacity-75">
-                        Compared to
-                      </span>
-                      <span className="font-extrabold text-sm text-slate-800 dark:text-slate-100">
-                        {alt.vehicle}
-                      </span>
-                    </div>
-
-                    <div className="mt-4">
-                      {alt.savings > 0 ? (
-                        <div>
-                          <p className="text-xs text-slate-400">You Save</p>
-                          <p className="text-lg font-black text-emerald-600 dark:text-emerald-400">
-                            +{alt.savings} kg CO₂e
-                          </p>
-                        </div>
-                      ) : (
-                        <div>
-                          <p className="text-xs text-slate-400">Increases by</p>
-                          <p className="text-lg font-black text-red-600 dark:text-red-400">
-                            {alt.savings} kg CO₂e
-                          </p>
-                        </div>
-                      )}
-                    </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-slate-50 p-3 rounded-2xl text-center border border-slate-100">
+                    <span className="text-[10px] uppercase font-bold text-slate-400">Distance</span>
+                    <p className="text-xl font-black text-slate-850 mt-1">
+                      {routeDetails.distance} <span className="text-xs font-semibold">km</span>
+                    </p>
                   </div>
-                ))}
-              </div>
+                  <div className="bg-slate-50 p-3 rounded-2xl text-center border border-slate-100">
+                    <span className="text-[10px] uppercase font-bold text-slate-400">Duration</span>
+                    <p className="text-xl font-black text-slate-855 mt-1">
+                      {routeDetails.duration} <span className="text-xs font-semibold">min</span>
+                    </p>
+                  </div>
+                </div>
 
-              {/* ECO COMMUTING RECOMMENDATION TRICKS */}
-              <div className="bg-slate-50 dark:bg-dark-800/40 p-4 rounded-2xl flex items-start space-x-3 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
-                <AlertCircle size={18} className="text-emerald-500 mt-0.5 flex-shrink-0" />
-                <div className="space-y-1">
-                  <span className="font-bold text-slate-800 dark:text-slate-100">Eco-Commute Savings Trick:</span>
-                  <p>
-                    <strong>Tip:</strong> If using a fuel-powered vehicle for this {routeDetails.distance} km journey, maintain an even speed of 80–90 km/h (50–55 mph). Driving fast or aggressive acceleration increases engine load, which increases fuel consumption and carbon output by up to <strong>15%–30%</strong>!
+                {/* Total Carbon footprint box */}
+                <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-2xl text-center">
+                  <span className="text-xs font-bold text-emerald-600 uppercase tracking-wide">
+                    Calculated Carbon Footprint
+                  </span>
+                  <p className="text-3xl font-black text-emerald-800 mt-1">
+                    {carbonResult} <span className="text-sm font-semibold">kg CO₂e</span>
                   </p>
                 </div>
+
+                {/* Log Activity Button */}
+                {vehicleType !== 'WALK' && (
+                  <button
+                    onClick={handleLogActivity}
+                    disabled={logging}
+                    className="w-full bg-gradient-to-r from-primary-600 to-secondary-500 text-white font-bold py-2.5 rounded-xl shadow-md transition duration-150 flex items-center justify-center space-x-2 text-sm"
+                  >
+                    {logging ? (
+                      <>
+                        <RefreshCw size={16} className="animate-spin" />
+                        <span>Logging...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle size={16} />
+                        <span>Log this journey in activities</span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
+            )}
+          </div>
+
+          {/* Right Side: Leaflet Map & Eco-Alternatives comparisons */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* LEAFLET MAP ELEMENT */}
+            <div className="bg-white border border-borderEco p-4 rounded-3xl relative shadow-sm">
+              {!mapLoaded && (
+                <div className="absolute inset-0 z-10 bg-slate-50 flex items-center justify-center rounded-3xl">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+                </div>
+              )}
+              <div 
+                id="route-map" 
+                className="w-full h-[400px] rounded-2xl z-0"
+                style={{ border: '1px solid rgba(16, 185, 129, 0.15)' }}
+              />
             </div>
-          )}
+
+            {/* ALTERNATIVE VEHICLE SAVINGS COMPARISONS */}
+            {routeDetails && (
+              <div className="bg-white border border-borderEco p-6 rounded-3xl space-y-6 shadow-sm">
+                <div>
+                  <h3 className="text-lg font-bold flex items-center space-x-2 text-slate-800">
+                    <Eye size={18} className="text-emerald-500" />
+                    <span>How to Save Emission on this route</span>
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1">Compare alternate modes of transit and see how much CO₂ you could prevent from being released.</p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {alternates.map((alt, idx) => (
+                    <div 
+                      key={idx} 
+                      className={`p-4 rounded-2xl border transition duration-300 flex flex-col justify-between
+                        ${alt.savings > 0 
+                          ? 'bg-emerald-50/50 border-emerald-100 text-emerald-800' 
+                          : 'bg-red-50/50 border-red-100 text-red-800'
+                        }`}
+                    >
+                      <div>
+                        <span className="text-[10px] font-bold uppercase tracking-wider block opacity-75">
+                          Compared to
+                        </span>
+                        <span className="font-extrabold text-sm text-slate-800">
+                          {alt.vehicle}
+                        </span>
+                      </div>
+
+                      <div className="mt-4 font-semibold">
+                        {alt.savings > 0 ? (
+                          <div>
+                            <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">You Save</p>
+                            <p className="text-lg font-black text-emerald-600">
+                              +{alt.savings} kg CO₂e
+                            </p>
+                          </div>
+                        ) : (
+                          <div>
+                            <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Increases by</p>
+                            <p className="text-lg font-black text-red-600">
+                              {alt.savings} kg CO₂e
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* ECO COMMUTING RECOMMENDATION TRICKS */}
+                <div className="bg-slate-50 p-4 rounded-2xl flex items-start space-x-3 text-xs leading-relaxed text-slate-600 border border-slate-100 font-semibold">
+                  <AlertCircle size={18} className="text-emerald-500 mt-0.5 flex-shrink-0" />
+                  <div className="space-y-1">
+                    <span className="font-bold text-slate-800">Eco-Commute Savings Trick:</span>
+                    <p>
+                      <strong>Tip:</strong> If using a fuel-powered vehicle for this {routeDetails.distance} km journey, maintain an even speed of 80–90 km/h (50–55 mph). Driving fast or aggressive acceleration increases engine load, which increases fuel consumption and carbon output by up to <strong>15%–30%</strong>!
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
