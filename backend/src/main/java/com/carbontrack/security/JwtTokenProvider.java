@@ -31,12 +31,20 @@ public class JwtTokenProvider {
 
     public String generateAccessToken(Authentication authentication) {
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-        return generateTokenFromUsername(userPrincipal.getUsername(), jwtExpirationInMs);
+        return generateAccessTokenFromUsername(userPrincipal.getUsername());
     }
 
     public String generateRefreshToken(Authentication authentication) {
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-        return generateTokenFromUsername(userPrincipal.getUsername(), jwtRefreshExpirationInMs);
+        return generateRefreshTokenFromUsername(userPrincipal.getUsername());
+    }
+
+    public String generateAccessTokenFromUsername(String username) {
+        return generateTokenFromUsername(username, jwtExpirationInMs);
+    }
+
+    public String generateRefreshTokenFromUsername(String username) {
+        return generateTokenFromUsername(username, jwtRefreshExpirationInMs);
     }
 
     public String generateTokenFromUsername(String username, long expirationMs) {
@@ -61,12 +69,29 @@ public class JwtTokenProvider {
         return claims.getSubject();
     }
 
+    public long getRemainingExpirationMs(String token) {
+        try {
+            Claims claims = Jwts.parser()
+                    .verifyWith(jwtSecretKey)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+            Date expiration = claims.getExpiration();
+            Date now = new Date();
+            return Math.max(0, expiration.getTime() - now.getTime());
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
     public boolean validateToken(String authToken) {
         try {
             Jwts.parser().verifyWith(jwtSecretKey).build().parseSignedClaims(authToken);
             return true;
+        } catch (ExpiredJwtException ex) {
+            log.warn("JWT token expired: {}", ex.getMessage());
         } catch (JwtException | IllegalArgumentException ex) {
-            log.error("Invalid JWT token: {}", ex.getMessage());
+            log.warn("Invalid JWT token: {}", ex.getMessage());
         }
         return false;
     }

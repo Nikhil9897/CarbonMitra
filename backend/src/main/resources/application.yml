@@ -1,6 +1,8 @@
 spring:
   application:
     name: carbontrack
+  main:
+    lazy-initialization: true
 
   # ── PostgreSQL Datasource ─────────
   datasource:
@@ -60,7 +62,7 @@ app:
   frontend-url: ${FRONTEND_URL:http://localhost:5173}
   jwt:
     secret: ${JWT_SECRET}
-    expiration-ms: 3600000 # 1 hour
+    expiration-ms: 900000 # 15 minutes
     refresh-expiration-ms: 604800000 # 7 days
   oauth2:
     authorized-redirect-uris: ${FRONTEND_URL:http://localhost:5173}/oauth2/redirect

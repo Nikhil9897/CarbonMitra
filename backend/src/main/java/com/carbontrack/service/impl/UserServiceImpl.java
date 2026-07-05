@@ -34,6 +34,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserResponse getCurrentUserProfile(UserPrincipal currentUser) {
         User user = userRepository.findById(currentUser.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", currentUser.getId()));
@@ -75,8 +76,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<UserResponse> getAllUsers() {
-        return userRepository.findAll().stream()
+        return userRepository.findAllWithOrganization().stream()
                 .map(UserMapper::toResponse)
                 .collect(Collectors.toList());
     }
@@ -92,7 +94,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public List<UserResponse> getOrganizationMembers(Long orgId) {
-        return userRepository.findByOrganizationId(orgId).stream()
+        return userRepository.findByOrganizationIdWithOrganization(orgId).stream()
                 .map(UserMapper::toResponse)
                 .collect(Collectors.toList());
     }

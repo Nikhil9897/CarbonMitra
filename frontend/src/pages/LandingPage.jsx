@@ -971,65 +971,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 9. Section 7: Testimonials Slider */}
-      <section className="py-28 relative border-t border-slate-200/50 bg-slate-50 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 md:px-12 text-center mb-16">
-          <span className="text-emerald-600 font-mono text-xs tracking-[0.35em] uppercase font-bold block mb-4">GLOBAL ASSURANCE</span>
-          <h2 className="text-3xl md:text-5xl font-extrabold uppercase tracking-tight text-slate-900 mb-6">
-            Trusted by Enterprise Auditors
-          </h2>
-        </div>
 
-        {/* Horizontal scroll containing mock reviews */}
-        <div className="max-w-7xl mx-auto px-6 md:px-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-          
-          {/* Card 1 */}
-          <div className="glass-card p-8 rounded-[24px] border-slate-200/60 flex flex-col justify-between h-72">
-            <div className="flex items-center gap-1 text-emerald-600">
-              <Award size={18} />
-              <span className="text-xs font-mono uppercase tracking-widest text-emerald-600">SEC audit pass</span>
-            </div>
-            <p className="text-sm text-slate-600 leading-relaxed italic my-6">
-              "CarbonMitra consolidated our Scope 1 and 2 logistics inputs in under two weeks. Our global auditors were completely satisfied with the cryptographic hash audit trails."
-            </p>
-            <div>
-              <div className="text-sm font-bold text-slate-900">Milind Verma</div>
-              <div className="text-[10px] font-mono text-slate-500 uppercase">Director of Sustainability, PATtech</div>
-            </div>
-          </div>
-
-          {/* Card 2 */}
-          <div className="glass-card p-8 rounded-[24px] border-slate-200/60 flex flex-col justify-between h-72">
-            <div className="flex items-center gap-1 text-emerald-600">
-              <Award size={18} />
-              <span className="text-xs font-mono uppercase tracking-widest text-emerald-600">CSRD ready</span>
-            </div>
-            <p className="text-sm text-slate-600 leading-relaxed italic my-6">
-              "The integration of the Cohere AI Eco-Assistant allowed us to optimize route deviations directly, leading to a verified 14.2% carbon reduction in our shipping fleet."
-            </p>
-            <div>
-              <div className="text-sm font-bold text-slate-900">Sarah Jenkins</div>
-              <div className="text-[10px] font-mono text-slate-500 uppercase">VP Compliance, EcoLogistics</div>
-            </div>
-          </div>
-
-          {/* Card 3 */}
-          <div className="glass-card p-8 rounded-[24px] border-slate-200/60 flex flex-col justify-between h-72">
-            <div className="flex items-center gap-1 text-emerald-600">
-              <Award size={18} />
-              <span className="text-xs font-mono uppercase tracking-widest text-emerald-600">ISO 14064 Compliant</span>
-            </div>
-            <p className="text-sm text-slate-600 leading-relaxed italic my-6">
-              "The automatic generation of certificate hashes has completely streamlined our quarterly climate dashboard reporting. We save hundreds of hours of auditing labor."
-            </p>
-            <div>
-              <div className="text-sm font-bold text-slate-900">David Kael</div>
-              <div className="text-[10px] font-mono text-slate-500 uppercase">Principal Auditor, GreenTech Assurance</div>
-            </div>
-          </div>
-
-        </div>
-      </section>
 
       {/* 10. Section 8: Pricing */}
       <section id="pricing" className="py-28 relative border-t border-slate-200/50 bg-slate-50 overflow-hidden">

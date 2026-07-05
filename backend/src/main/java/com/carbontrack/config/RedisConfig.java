@@ -10,10 +10,13 @@ import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 
+import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
+
 import java.time.Duration;
 
 @Configuration
 @Slf4j
+@EnableRedisRepositories(enabled = false)
 public class RedisConfig implements CachingConfigurer {
 
     @Bean

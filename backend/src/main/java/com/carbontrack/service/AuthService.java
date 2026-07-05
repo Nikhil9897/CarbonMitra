@@ -12,4 +12,5 @@ public interface AuthService {
     TokenRefreshResponse refreshToken(TokenRefreshRequest tokenRefreshRequest);
     void forgotPassword(com.carbontrack.dto.ForgotPasswordRequest forgotPasswordRequest);
     void resetPassword(com.carbontrack.dto.ResetPasswordRequest resetPasswordRequest);
+    void logout(String accessToken, String refreshToken);
 }
