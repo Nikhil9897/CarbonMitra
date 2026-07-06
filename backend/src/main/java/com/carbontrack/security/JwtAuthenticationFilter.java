@@ -33,6 +33,32 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getServletPath();
+        org.springframework.util.AntPathMatcher pathMatcher = new org.springframework.util.AntPathMatcher();
+        
+        java.util.List<String> skipPaths = java.util.Arrays.asList(
+                "/",
+                "/favicon.ico",
+                "/error",
+                "/api/ping",
+                "/api/health",
+                "/actuator/**",
+                "/swagger-ui/**",
+                "/swagger-ui.html",
+                "/v3/api-docs/**",
+                "/webjars/**",
+                "/auth/**",
+                "/api/auth/**",
+                "/public/**",
+                "/oauth2/**",
+                "/login/oauth2/code/**"
+        );
+        
+        return skipPaths.stream().anyMatch(pattern -> pathMatcher.match(pattern, path));
+    }
+
+    @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         try {
