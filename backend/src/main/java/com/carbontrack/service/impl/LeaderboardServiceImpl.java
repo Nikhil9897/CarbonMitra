@@ -31,6 +31,19 @@ public class LeaderboardServiceImpl implements LeaderboardService {
         List<Object[]> rawData = getCachedLeaderboardData();
         List<LeaderboardResponse> leaderboard = new ArrayList<>();
 
+        // Extract user IDs to fetch badge counts in a single batch query
+        java.util.List<Long> userIds = rawData.stream()
+                .map(row -> (Long) row[0])
+                .collect(java.util.stream.Collectors.toList());
+        
+        java.util.Map<Long, Long> badgeCountsMap = new java.util.HashMap<>();
+        if (!userIds.isEmpty()) {
+            List<Object[]> badgeCounts = userBadgeRepository.countBadgesByUserIds(userIds);
+            for (Object[] countRow : badgeCounts) {
+                badgeCountsMap.put((Long) countRow[0], (Long) countRow[1]);
+            }
+        }
+
         int rank = 1;
         for (Object[] row : rawData) {
             Long userId = (Long) row[0];
@@ -43,7 +56,7 @@ public class LeaderboardServiceImpl implements LeaderboardService {
                 displayUsername = anonymizeUsername(username);
             }
 
-            int badgesCount = userBadgeRepository.findByUserId(userId).size();
+            int badgesCount = badgeCountsMap.getOrDefault(userId, 0L).intValue();
 
             leaderboard.add(LeaderboardResponse.builder()
                     .userId(userId)

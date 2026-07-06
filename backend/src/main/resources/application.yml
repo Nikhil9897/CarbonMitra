@@ -2,7 +2,7 @@ spring:
   application:
     name: carbontrack
   main:
-    lazy-initialization: true
+    lazy-initialization: false
 
   # ── PostgreSQL Datasource ─────────
   datasource:
@@ -11,18 +11,29 @@ spring:
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
-      maximum-pool-size: 3
-      minimum-idle: 1
+      maximum-pool-size: 10
+      minimum-idle: 5
       idle-timeout: 30000
+      max-lifetime: 1800000
+      connection-timeout: 20000
 
   # ── JPA / Hibernate ───────────────
   jpa:
     open-in-view: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: validate
     properties:
       hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+        temp:
+          use_jdbc_metadata_defaults: false
+        jdbc:
+          batch_size: 25
+          batch_versioned_data: true
+        order_inserts: true
+        order_updates: true
     show-sql: false
 
   # ── Flyway Migrations ─────────────
@@ -73,6 +84,10 @@ app:
 server:
   port: ${PORT:8080}
   forward-headers-strategy: native
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json,application/xml
+    min-response-size: 1024
   tomcat:
     remoteip:
       remote-ip-header: x-forwarded-for
@@ -92,15 +107,26 @@ springdoc:
 cohere:
   api-key: ${COHERE_API_KEY}
 
-# ── Actuator Health Endpoint ─────────
+# ── Actuator Health & Metrics Endpoint ─────────
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics,prometheus
   endpoint:
     health:
       show-details: when-authorized
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+# ── Cloudinary Configuration ────────
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME:}
+  api-key: ${CLOUDINARY_API_KEY:}
+  api-secret: ${CLOUDINARY_API_SECRET:}
 
 # ── Logging ──────────────────────────
 logging:

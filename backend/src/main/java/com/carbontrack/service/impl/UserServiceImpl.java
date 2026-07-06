@@ -11,6 +11,8 @@ import com.carbontrack.repository.OrganizationRepository;
 import com.carbontrack.repository.UserRepository;
 import com.carbontrack.security.UserPrincipal;
 import com.carbontrack.service.UserService;
+import org.springframework.context.ApplicationEventPublisher;
+import com.carbontrack.event.PhotoUploadedEvent;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,13 +26,16 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final OrganizationRepository organizationRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ApplicationEventPublisher eventPublisher;
 
     public UserServiceImpl(UserRepository userRepository,
                            OrganizationRepository organizationRepository,
-                           PasswordEncoder passwordEncoder) {
+                           PasswordEncoder passwordEncoder,
+                           ApplicationEventPublisher eventPublisher) {
         this.userRepository = userRepository;
         this.organizationRepository = organizationRepository;
         this.passwordEncoder = passwordEncoder;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -112,8 +117,9 @@ public class UserServiceImpl implements UserService {
             user.setUsername(request.getUsername());
         }
 
-        if (request.getProfilePicture() != null) {
-            user.setProfilePicture(request.getProfilePicture());
+        if (request.getProfilePicture() != null && !request.getProfilePicture().isBlank()) {
+            user.setProfilePicture("uploading");
+            eventPublisher.publishEvent(new PhotoUploadedEvent(this, userId, request.getProfilePicture()));
         }
 
         User updatedUser = userRepository.save(user);

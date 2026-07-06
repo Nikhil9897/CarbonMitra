@@ -15,5 +15,5 @@ public interface GoalService {
     List<GoalResponse> getGoalsForUser(UserPrincipal currentUser);
     GoalProgressResponse getGoalProgress(Long goalId, UserPrincipal currentUser);
     GoalPredictionResponse predictGoalCompletion(Long goalId, UserPrincipal currentUser);
-    void checkAndUpdateGoalsProgress();
+    void checkAndUpdateGoalsProgress(Long userId);
 }

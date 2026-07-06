@@ -35,13 +35,16 @@ public class GoalServiceImpl implements GoalService {
     private final GoalRepository goalRepository;
     private final UserRepository userRepository;
     private final ActivityLogRepository activityLogRepository;
+    private final org.springframework.context.ApplicationEventPublisher eventPublisher;
 
     public GoalServiceImpl(GoalRepository goalRepository,
                            UserRepository userRepository,
-                           ActivityLogRepository activityLogRepository) {
+                           ActivityLogRepository activityLogRepository,
+                           org.springframework.context.ApplicationEventPublisher eventPublisher) {
         this.goalRepository = goalRepository;
         this.userRepository = userRepository;
         this.activityLogRepository = activityLogRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -65,6 +68,7 @@ public class GoalServiceImpl implements GoalService {
                 .build();
 
         goal = goalRepository.save(goal);
+        eventPublisher.publishEvent(new com.carbontrack.event.EventCreatedEvent(this, goal));
         return GoalMapper.toResponse(goal);
     }
 
@@ -197,8 +201,8 @@ public class GoalServiceImpl implements GoalService {
 
     @Override
     @Transactional
-    public void checkAndUpdateGoalsProgress() {
-        List<Goal> activeGoals = goalRepository.findByStatus(GoalStatus.ACTIVE);
+    public void checkAndUpdateGoalsProgress(Long userId) {
+        List<Goal> activeGoals = goalRepository.findByUserIdAndStatus(userId, GoalStatus.ACTIVE);
         LocalDate now = LocalDate.now();
 
         for (Goal goal : activeGoals) {

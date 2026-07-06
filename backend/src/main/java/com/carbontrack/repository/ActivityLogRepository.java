@@ -13,6 +13,11 @@ import java.util.List;
 @Repository
 public interface ActivityLogRepository extends JpaRepository<ActivityLog, Long> {
     List<ActivityLog> findByUserIdOrderByLogDateDesc(Long userId);
+
+    org.springframework.data.domain.Page<ActivityLog> findByUserId(Long userId, org.springframework.data.domain.Pageable pageable);
+
+    @Query("SELECT MIN(al.logDate) FROM ActivityLog al WHERE al.user.id = :userId")
+    java.util.Optional<LocalDateTime> getFirstActivityLogDate(@Param("userId") Long userId);
     
     List<ActivityLog> findByUserIdAndLogDateBetweenOrderByLogDateDesc(Long userId, LocalDateTime start, LocalDateTime end);
 

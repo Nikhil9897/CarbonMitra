@@ -125,6 +125,7 @@ public class AuthServiceImpl implements AuthService {
             }
             organization = Organization.builder().name(orgName).build();
             organization = organizationRepository.save(organization);
+            eventPublisher.publishEvent(new com.carbontrack.event.ClubCreatedEvent(this, organization));
             isNewOrg = true;
         } 
         // Or if joining an existing organization
@@ -186,8 +187,11 @@ public class AuthServiceImpl implements AuthService {
             tokenBlacklistService.blacklistToken(requestRefreshToken, remainingMs);
 
             // Rotate both tokens for security
-            String newAccessToken = tokenProvider.generateAccessTokenFromUsername(username);
-            String newRefreshToken = tokenProvider.generateRefreshTokenFromUsername(username);
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new TokenRefreshException(requestRefreshToken, "User not found associated with this token"));
+            UserPrincipal principal = UserPrincipal.create(user);
+            String newAccessToken = tokenProvider.generateAccessToken(principal);
+            String newRefreshToken = tokenProvider.generateRefreshToken(principal);
 
             return TokenRefreshResponse.builder()
                     .accessToken(newAccessToken)

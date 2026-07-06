@@ -4,6 +4,7 @@ import com.carbontrack.event.ActivityLoggedEvent;
 import com.carbontrack.service.BadgeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -16,6 +17,7 @@ public class BadgeAwardListener {
         this.badgeService = badgeService;
     }
 
+    @Async("notificationExecutor")
     @EventListener
     public void handleActivityLogged(ActivityLoggedEvent event) {
         log.info("BadgeAwardListener: checking badge awards for user {}", event.getActivityLog().getUser().getUsername());

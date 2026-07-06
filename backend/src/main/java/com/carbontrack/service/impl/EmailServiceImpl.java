@@ -12,7 +12,11 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 
+import org.springframework.context.annotation.Lazy;
+import org.springframework.scheduling.annotation.Async;
+
 @Service
+@Lazy
 @Slf4j
 public class EmailServiceImpl implements EmailService {
 
@@ -63,16 +67,36 @@ public class EmailServiceImpl implements EmailService {
                     .POST(HttpRequest.BodyPublishers.ofString(jsonBody, StandardCharsets.UTF_8))
                     .build();
 
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-
-            if (response.statusCode() >= 200 && response.statusCode() < 300) {
-                log.info("Email sent successfully via Resend API to {}. Response: {}", to, response.body());
-            } else {
-                log.error("Failed to send email via Resend API to {}. Status: {}, Response: {}", to, response.statusCode(), response.body());
-                logEmailFallback(to, subject, htmlContent);
+            int maxRetries = 3;
+            int attempt = 0;
+            long delay = 1000;
+            while (attempt < maxRetries) {
+                try {
+                    attempt++;
+                    HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+                    if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                        log.info("Email sent successfully via Resend API to {} on attempt {}. Response: {}", to, attempt, response.body());
+                        return;
+                    } else {
+                        log.warn("Failed to send email to {} (status: {}). Attempt {} of {}.", to, response.statusCode(), attempt, maxRetries);
+                    }
+                } catch (Exception e) {
+                    log.error("Error sending email to {} on attempt {} of {}: {}", to, attempt, maxRetries, e.getMessage());
+                }
+                if (attempt < maxRetries) {
+                    try {
+                        Thread.sleep(delay);
+                        delay *= 2;
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                }
             }
+            log.error("All {} attempts to send email to {} failed. Logging fallback.", maxRetries, to);
+            logEmailFallback(to, subject, htmlContent);
         } catch (Exception e) {
-            log.error("Error sending email via Resend API to {}: {}", to, e.getMessage(), e);
+            log.error("Error building email via Resend API to {}: {}", to, e.getMessage(), e);
             logEmailFallback(to, subject, htmlContent);
         }
     }
@@ -88,24 +112,28 @@ public class EmailServiceImpl implements EmailService {
     }
 
     @Override
+    @Async("emailExecutor")
     public void sendWelcomeEmail(User user) {
         String htmlContent = buildWelcomeHtmlTemplate(user.getUsername());
         sendEmailViaResend(user.getEmail(), "Welcome to CarbonMitra! 🌍", htmlContent);
     }
 
     @Override
+    @Async("emailExecutor")
     public void sendPasswordResetEmail(User user, String token) {
         String htmlContent = buildPasswordResetHtmlTemplate(user.getUsername(), token);
         sendEmailViaResend(user.getEmail(), "Reset Your CarbonMitra Password 🔑", htmlContent);
     }
 
     @Override
+    @Async("emailExecutor")
     public void sendStreakWarningEmail(User user) {
         String htmlContent = buildStreakWarningHtmlTemplate(user.getUsername());
         sendEmailViaResend(user.getEmail(), "Don't lose your CarbonMitra streak! 🔥", htmlContent);
     }
 
     @Override
+    @Async("emailExecutor")
     public void sendWeeklyDigestEmail(User user, Double weeklyCo2, Double weeklyOffset, int badgesCount) {
         String htmlContent = buildWeeklyDigestHtmlTemplate(user.getUsername(), weeklyCo2, weeklyOffset, badgesCount);
         sendEmailViaResend(user.getEmail(), "Your CarbonMitra Weekly Digest 🌿", htmlContent);

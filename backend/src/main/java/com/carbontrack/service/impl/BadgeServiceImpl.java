@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
+@org.springframework.context.annotation.Lazy
 public class BadgeServiceImpl implements BadgeService {
 
     private static final double DAILY_BASELINE_CO2E = 15.0;
@@ -149,12 +150,12 @@ public class BadgeServiceImpl implements BadgeService {
         }
 
         // Days elapsed since first activity log to now
-        List<ActivityLog> logs = activityLogRepository.findByUserIdOrderByLogDateDesc(userId);
-        if (logs.isEmpty()) {
+        java.time.LocalDateTime firstLogDateTime = activityLogRepository.getFirstActivityLogDate(userId).orElse(null);
+        if (firstLogDateTime == null) {
             return 0.0;
         }
 
-        LocalDate firstLogDate = logs.get(logs.size() - 1).getLogDate().toLocalDate();
+        LocalDate firstLogDate = firstLogDateTime.toLocalDate();
         long totalDays = ChronoUnit.DAYS.between(firstLogDate, LocalDate.now()) + 1;
         totalDays = Math.max(1, totalDays);
 

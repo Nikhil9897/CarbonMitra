@@ -78,6 +78,9 @@ public class ActivityLogServiceImpl implements ActivityLogService {
         // Publish Spring Application Event for decoupled tasks (Goal checks, badge updates)
         eventPublisher.publishEvent(new ActivityLoggedEvent(this, log));
 
+        // Publish CarbonCalculatedEvent for decoupled async calculations audit/stats
+        eventPublisher.publishEvent(new com.carbontrack.event.CarbonCalculatedEvent(this, user.getId(), log.getActivityType(), log.getCo2e()));
+
         return ActivityLogMapper.toResponse(log);
     }
 
