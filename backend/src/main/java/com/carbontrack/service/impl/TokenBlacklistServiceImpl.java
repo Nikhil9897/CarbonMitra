@@ -1,12 +1,14 @@
 package com.carbontrack.service.impl;
 
 import com.carbontrack.service.TokenBlacklistService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;
 
 @Service
+@Slf4j
 public class TokenBlacklistServiceImpl implements TokenBlacklistService {
 
     private final StringRedisTemplate redisTemplate;
@@ -19,12 +21,16 @@ public class TokenBlacklistServiceImpl implements TokenBlacklistService {
     @Override
     public void blacklistToken(String token, long expirationMs) {
         if (token != null && expirationMs > 0) {
-            redisTemplate.opsForValue().set(
-                    BLACKLIST_PREFIX + token,
-                    "true",
-                    expirationMs,
-                    TimeUnit.MILLISECONDS
-            );
+            try {
+                redisTemplate.opsForValue().set(
+                        BLACKLIST_PREFIX + token,
+                        "true",
+                        expirationMs,
+                        TimeUnit.MILLISECONDS
+                );
+            } catch (Exception e) {
+                log.error("Failed to blacklist token in Redis: {}", e.getMessage());
+            }
         }
     }
 
@@ -33,6 +39,11 @@ public class TokenBlacklistServiceImpl implements TokenBlacklistService {
         if (token == null) {
             return false;
         }
-        return Boolean.TRUE.equals(redisTemplate.hasKey(BLACKLIST_PREFIX + token));
+        try {
+            return Boolean.TRUE.equals(redisTemplate.hasKey(BLACKLIST_PREFIX + token));
+        } catch (Exception e) {
+            log.warn("Redis connection failed while checking token blacklist. Falling back to allowed. Error: {}", e.getMessage());
+            return false;
+        }
     }
 }
