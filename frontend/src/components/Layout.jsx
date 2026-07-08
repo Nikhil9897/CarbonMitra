@@ -105,7 +105,7 @@ const Layout = ({ children }) => {
       <div className="flex flex-1 relative">
         {/* Sidebar Navigation */}
         <aside className={`
-          fixed md:sticky top-[57px] left-0 z-35
+          fixed md:sticky top-[57px] left-0 z-30
           w-64 h-[calc(100vh-57px)]
           bg-white border-r border-borderEco
           transition-transform duration-300 ease-in-out

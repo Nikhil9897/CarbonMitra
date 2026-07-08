@@ -12,6 +12,11 @@ import java.util.Map;
 @RestController
 public class HealthController {
 
+    @GetMapping("/")
+    public ResponseEntity<ApiResponse<String>> home() {
+        return ResponseEntity.ok(ApiResponse.success("Welcome to CarbonMitra Backend API. System is fully functional!"));
+    }
+
     @GetMapping("/api/ping")
     public ResponseEntity<ApiResponse<Map<String, Object>>> ping() {
         Map<String, Object> data = new HashMap<>();
