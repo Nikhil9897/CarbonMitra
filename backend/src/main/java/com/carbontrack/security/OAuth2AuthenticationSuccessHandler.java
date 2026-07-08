@@ -1,6 +1,7 @@
 package com.carbontrack.security;
 
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -14,25 +15,25 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+
+import static com.carbontrack.security.HttpCookieOAuth2AuthorizationRequestRepository.REDIRECT_URI_PARAM_COOKIE_NAME;
 
 @Component
 @Slf4j
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final JwtTokenProvider tokenProvider;
-
-    /**
-     * Authorized redirect URIs injected as a comma-separated string and split into a list.
-     * Previously injected directly as List<String> which caused Spring to treat the full
-     * comma-separated value as a single list element.
-     */
     private final List<String> authorizedRedirectUris;
+    private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
 
     public OAuth2AuthenticationSuccessHandler(
             JwtTokenProvider tokenProvider,
-            @Value("${app.oauth2.authorized-redirect-uris}") String authorizedRedirectUrisStr) {
+            @Value("${app.oauth2.authorized-redirect-uris}") String authorizedRedirectUrisStr,
+            HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository) {
         this.tokenProvider = tokenProvider;
         this.authorizedRedirectUris = Arrays.asList(authorizedRedirectUrisStr.split(","));
+        this.httpCookieOAuth2AuthorizationRequestRepository = httpCookieOAuth2AuthorizationRequestRepository;
     }
 
     @Override
@@ -45,21 +46,21 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             return;
         }
 
-        clearAuthenticationAttributes(request);
+        clearAuthenticationAttributes(request, response);
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }
 
-    @Override
     protected String determineTargetUrl(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) {
-        String redirectUri = request.getParameter("redirect_uri");
+        // Read redirect_uri from the cookie instead of request parameter (which is null on Google callback)
+        Optional<String> redirectUri = getCookie(request, REDIRECT_URI_PARAM_COOKIE_NAME).map(Cookie::getValue);
 
-        if (redirectUri != null && !isAuthorizedRedirectUri(redirectUri)) {
+        if (redirectUri.isPresent() && !isAuthorizedRedirectUri(redirectUri.get())) {
             throw new IllegalArgumentException(
                     "Unauthorized redirect URI. Cannot proceed with OAuth2 authentication.");
         }
 
-        String targetUrl = (redirectUri != null) ? redirectUri.trim() : authorizedRedirectUris.get(0).trim();
+        String targetUrl = redirectUri.orElse(authorizedRedirectUris.get(0).trim());
 
         String accessToken = tokenProvider.generateAccessToken(authentication);
         String refreshToken = tokenProvider.generateRefreshToken(authentication);
@@ -70,6 +71,11 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                 .queryParam("token", accessToken)
                 .queryParam("refresh_token", refreshToken)
                 .build().toUriString();
+    }
+
+    protected void clearAuthenticationAttributes(HttpServletRequest request, HttpServletResponse response) {
+        super.clearAuthenticationAttributes(request);
+        httpCookieOAuth2AuthorizationRequestRepository.removeAuthorizationRequestCookies(request, response);
     }
 
     private boolean isAuthorizedRedirectUri(String uri) {
@@ -85,7 +91,6 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                 .anyMatch(authorizedRedirectUri -> {
                     try {
                         URI authorizedURI = URI.create(authorizedRedirectUri.trim());
-                        // Match by host and port only (path is allowed to differ)
                         return authorizedURI.getHost().equalsIgnoreCase(clientRedirectUri.getHost())
                                 && authorizedURI.getPort() == clientRedirectUri.getPort();
                     } catch (Exception e) {
@@ -93,5 +98,17 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                         return false;
                     }
                 });
+    }
+
+    private Optional<Cookie> getCookie(HttpServletRequest request, String name) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().equals(name)) {
+                    return Optional.of(cookie);
+                }
+            }
+        }
+        return Optional.empty();
     }
 }
