@@ -20,15 +20,11 @@ spring:
   # ── JPA / Hibernate ───────────────
   jpa:
     open-in-view: false
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: validate
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
-        boot:
-          allow_jdbc_metadata_access: false
         transaction:
           jta:
             platform: org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatformTest
