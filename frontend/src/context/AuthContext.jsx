@@ -12,7 +12,14 @@ export const AuthProvider = ({ children }) => {
     const storedUser = localStorage.getItem('user');
     const token = localStorage.getItem('token');
     if (storedUser && token) {
-      setUser(JSON.parse(storedUser));
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch {
+        // Corrupted localStorage — clear and force re-login
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+      }
     }
     setLoading(false);
   }, []);
@@ -38,7 +45,7 @@ export const AuthProvider = ({ children }) => {
         return true;
       }
     } catch (error) {
-      const msg = error.response?.data?.message || 'Login failed, please check your credentials';
+      const msg = extractErrorMessage(error, 'Login failed. Please check your credentials.');
       toast.error(msg);
     }
     return false;
@@ -72,13 +79,29 @@ export const AuthProvider = ({ children }) => {
         return true;
       }
     } catch (error) {
-      const msg = error.response?.data?.message || 'Registration failed';
+      const msg = extractErrorMessage(error, 'Registration failed. Please check your details.');
       toast.error(msg);
     }
     return false;
   };
 
-  const logout = useCallback(() => {
+  /**
+   * Logout: blacklist tokens on the server first, then clear local state.
+   * This ensures revoked tokens cannot be reused even before their natural expiry.
+   */
+  const logout = useCallback(async () => {
+    const accessToken = localStorage.getItem('token');
+    const refreshToken = localStorage.getItem('refreshToken');
+
+    // Attempt to blacklist tokens on the backend
+    if (accessToken || refreshToken) {
+      try {
+        await api.post('/api/auth/logout', { accessToken, refreshToken });
+      } catch {
+        // If the server is unreachable, still proceed with local logout
+      }
+    }
+
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
@@ -97,18 +120,21 @@ export const AuthProvider = ({ children }) => {
         toast.success('Successfully logged in via Google!');
       }
     } catch (error) {
-      toast.error('Failed to retrieve user profile');
-      logout();
+      toast.error('Failed to retrieve user profile. Please log in again.');
+      // Clear tokens and force re-login if profile fetch fails
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      setUser(null);
     } finally {
       setLoading(false);
     }
-  }, [logout]);
+  }, []);
 
   const handleOAuth2LoginSuccess = useCallback(async (token, refreshToken) => {
     setLoading(true);
     localStorage.setItem('token', token);
     localStorage.setItem('refreshToken', refreshToken);
-    // Fetch profile info immediately
     await fetchUserProfile();
   }, [fetchUserProfile]);
 
@@ -123,5 +149,30 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+
+/**
+ * Extracts a human-readable error message from an Axios error response.
+ * Handles both simple string messages and nested validation error maps.
+ */
+function extractErrorMessage(error, fallback) {
+  if (!error.response) {
+    return 'Cannot connect to the server. Please check your internet connection.';
+  }
+  const data = error.response?.data;
+  if (!data) return fallback;
+
+  // Direct message from ApiResponse
+  if (data.message && typeof data.message === 'string') {
+    return data.message;
+  }
+
+  // Validation error map (field -> message)
+  if (data.data && typeof data.data === 'object' && !Array.isArray(data.data)) {
+    const firstError = Object.values(data.data)[0];
+    if (firstError) return firstError;
+  }
+
+  return fallback;
+}
 
 export const useAuth = () => useContext(AuthContext);

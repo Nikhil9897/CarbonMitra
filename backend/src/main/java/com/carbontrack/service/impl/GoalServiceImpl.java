@@ -161,7 +161,8 @@ public class GoalServiceImpl implements GoalService {
     public GoalPredictionResponse predictGoalCompletion(Long goalId, UserPrincipal currentUser) {
         GoalProgressResponse progress = getGoalProgress(goalId, currentUser);
         LocalDate now = LocalDate.now();
-        Goal goal = goalRepository.findById(goalId).orElseThrow();
+        Goal goal = goalRepository.findById(goalId)
+                .orElseThrow(() -> new ResourceNotFoundException("Goal", "id", goalId));
 
         long daysElapsed = ChronoUnit.DAYS.between(progress.getStartDate(), now) + 1;
         daysElapsed = Math.max(1, daysElapsed);

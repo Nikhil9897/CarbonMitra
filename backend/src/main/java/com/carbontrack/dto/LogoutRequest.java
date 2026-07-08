@@ -1,6 +1,5 @@
 package com.carbontrack.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,6 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LogoutRequest {
-    @NotBlank(message = "Refresh token is required for logout")
-    private String refreshToken;
+    private String accessToken;   // Optional - fallback to Authorization header if absent
+    private String refreshToken;  // Optional - blacklisted if provided
 }

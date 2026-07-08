@@ -27,7 +27,7 @@ spring:
         format_sql: true
         transaction:
           jta:
-            platform: org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatformTest
+            platform: org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatformImpl
         jdbc:
           batch_size: 25
           batch_versioned_data: true

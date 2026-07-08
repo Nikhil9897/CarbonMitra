@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
-@Tag(name = "Authentication", description = "Endpoints for user registration, login, and token refresh")
+@Tag(name = "Authentication", description = "Endpoints for user registration, login, token refresh, and logout")
 public class AuthController {
 
     private final AuthService authService;
@@ -40,6 +40,36 @@ public class AuthController {
     public ResponseEntity<ApiResponse<TokenRefreshResponse>> refreshAccessToken(@Valid @RequestBody TokenRefreshRequest refreshRequest) {
         TokenRefreshResponse response = authService.refreshToken(refreshRequest);
         return ResponseEntity.ok(ApiResponse.success("Token refreshed successfully", response));
+    }
+
+    /**
+     * Blacklists both the access and refresh tokens server-side via Redis,
+     * preventing reuse even before their natural expiry time.
+     * The frontend must also clear localStorage.
+     */
+    @PostMapping("/logout")
+    @Operation(summary = "Logout and blacklist JWT tokens")
+    public ResponseEntity<ApiResponse<Void>> logout(@RequestBody(required = false) LogoutRequest logoutRequest,
+                                                    HttpServletRequest request) {
+        String accessToken = null;
+        String refreshToken = null;
+
+        // Extract access token from Authorization header
+        String bearerToken = request.getHeader("Authorization");
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+            accessToken = bearerToken.substring(7);
+        }
+
+        // Also use tokens provided in the request body (for refresh token blacklisting)
+        if (logoutRequest != null) {
+            if (logoutRequest.getAccessToken() != null) {
+                accessToken = logoutRequest.getAccessToken();
+            }
+            refreshToken = logoutRequest.getRefreshToken();
+        }
+
+        authService.logout(accessToken, refreshToken);
+        return ResponseEntity.ok(ApiResponse.success("Logged out successfully"));
     }
 
     @PostMapping("/forgot-password")
