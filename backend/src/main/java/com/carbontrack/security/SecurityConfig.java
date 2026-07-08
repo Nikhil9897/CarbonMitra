@@ -53,7 +53,8 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
+    // Resolved startup warning: Removed @Bean to avoid global context interference.
+    // The provider is explicitly registered in the security filter chain via .authenticationProvider() below.
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(customUserDetailsService);
