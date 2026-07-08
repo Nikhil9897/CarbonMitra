@@ -15,6 +15,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,12 +25,21 @@ import java.util.stream.Collectors;
 @Slf4j
 public class GlobalExceptionHandler {
 
-    // ── 404 Not Found ─────────────────────────────────────────────────────────
+    // ── 404 Not Found (Domain Resource) ───────────────────────────────────────
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleResourceNotFound(ResourceNotFoundException ex) {
         log.warn("Resource not found: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    // ── 404 Not Found (Static Resource / favicon.ico / etc) ───────────────────
+    // Previously fell through to Exception.class and returned 500.
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNoResourceFound(NoResourceFoundException ex) {
+        log.warn("Static resource not found: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error("Static resource not found: /" + ex.getResourcePath()));
     }
 
     // ── 400 Bad Request ───────────────────────────────────────────────────────
@@ -41,7 +51,6 @@ public class GlobalExceptionHandler {
     }
 
     // ── 400 Validation (request body @Valid) ─────────────────────────────────
-    // Previously returned success:true — now correctly returns success:false with field errors
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Map<String, String>>> handleValidationExceptions(
             MethodArgumentNotValidException ex) {
@@ -74,7 +83,6 @@ public class GlobalExceptionHandler {
     }
 
     // ── 400 Malformed JSON / Wrong Content-Type ───────────────────────────────
-    // Previously unhandled → 500. Now correctly returns 400.
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiResponse<Void>> handleMalformedJson(HttpMessageNotReadableException ex) {
         log.warn("Malformed request body: {}", ex.getMessage());
@@ -101,7 +109,6 @@ public class GlobalExceptionHandler {
     }
 
     // ── 405 Method Not Allowed ────────────────────────────────────────────────
-    // Previously unhandled → 500.
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<ApiResponse<Void>> handleMethodNotAllowed(HttpRequestMethodNotSupportedException ex) {
         log.warn("Method not allowed: {}", ex.getMessage());
@@ -133,7 +140,6 @@ public class GlobalExceptionHandler {
     }
 
     // ── 500 Internal Server Error ─────────────────────────────────────────────
-    // Full stack trace is logged server-side; only a safe generic message is returned to the client.
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGlobalException(Exception ex) {
         log.error("Unexpected error: {}", ex.getMessage(), ex);
