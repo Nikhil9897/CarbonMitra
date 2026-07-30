@@ -41,8 +41,9 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
-    # FLYWAY_URL should point to direct (non-pooler) DB endpoint for Neon/Supabase compatibility
-    # Set FLYWAY_URL in env vars to: jdbc:postgresql://<direct-host>:5432/<db>?sslmode=require
+    repair-on-migrate: true
+    out-of-order: false
+    # FLYWAY_URL should point to direct (non-pooler) DB endpoint for Neon compatibility
     url: ${FLYWAY_URL:${spring.datasource.url}}
     user: ${DB_USER}
     password: ${DB_PASSWORD}

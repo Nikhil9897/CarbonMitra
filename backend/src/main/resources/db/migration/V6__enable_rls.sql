@@ -1,12 +1,4 @@
--- Enable Row Level Security (RLS) on all public tables to secure against unauthorized PostgREST API access in Supabase.
--- Note: Spring Boot backend connecting via JDBC as superuser/table-owner will bypass RLS and operate normally.
-
-ALTER TABLE IF EXISTS organizations ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS emission_factors ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS activity_logs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS goals ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS badges ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS user_badges ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS password_reset_tokens ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS flyway_schema_history ENABLE ROW LEVEL SECURITY;
+-- V6: Enable RLS (Originally for Supabase PostgREST protection)
+-- Neon does not expose a PostgREST API, so RLS is not required.
+-- This migration is a no-op to maintain the migration version history.
+SELECT 1;
