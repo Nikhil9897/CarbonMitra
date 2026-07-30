@@ -33,12 +33,17 @@ spring:
           batch_versioned_data: true
         order_inserts: true
         order_updates: true
+        connection_provider_disables_autocommit: true
     show-sql: false
 
   # ── Flyway Migrations ─────────────
   flyway:
     enabled: true
     baseline-on-migrate: true
+    # Use direct JDBC URL for Flyway to avoid PgBouncer prepared statement issues
+    url: ${FLYWAY_URL:${spring.datasource.url}}
+    user: ${DB_USER}
+    password: ${DB_PASSWORD}
 
   # ── Redis Cache ────────────────────
   data:
