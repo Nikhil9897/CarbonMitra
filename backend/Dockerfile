@@ -13,10 +13,12 @@ WORKDIR /app
 COPY --from=build /app/target/carbontrack-backend-0.0.1-SNAPSHOT.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java", \
-            "-XX:+UseG1GC", \
-            "-XX:+UseContainerSupport", \
-            "-XX:MaxRAMPercentage=75.0", \
-            "-XX:InitialRAMPercentage=50.0", \
+            "-XX:+UseSerialGC", \
+            "-Xms128m", \
+            "-Xmx256m", \
+            "-XX:MaxMetaspaceSize=128m", \
+            "-Xss256k", \
+            "-XX:CICompilerCount=2", \
             "-XX:+ExitOnOutOfMemoryError", \
             "-Djava.security.egd=file:/dev/./urandom", \
             "-jar", "app.jar"]
