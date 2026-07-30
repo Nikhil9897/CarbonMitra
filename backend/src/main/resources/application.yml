@@ -43,7 +43,10 @@ spring:
     baseline-on-migrate: true
     repair-on-migrate: true
     out-of-order: false
+    postgresql:
+      transact-lock: false
     # FLYWAY_URL should point to direct (non-pooler) DB endpoint for Neon compatibility
+    # Also disable idle_in_transaction timeout: add &options=-c%20idle_in_transaction_session_timeout%3D0
     url: ${FLYWAY_URL:${spring.datasource.url}}
     user: ${DB_USER}
     password: ${DB_PASSWORD}
