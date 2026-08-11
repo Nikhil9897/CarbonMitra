@@ -6,12 +6,11 @@
 <p align="center"><strong>Full-Stack Sustainability Analytics Platform</strong></p>
 
 <p align="center">
-  <a href="https://github.com/Milindverma24/carbon_tracker"><img src="https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github" /></a>
+  <a href="https://github.com/Nikhil9897/CarbonMitra"><img src="https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github" /></a>
   <img src="https://img.shields.io/badge/Java-17-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" />
   <img src="https://img.shields.io/badge/Spring_Boot-3.3-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white" />
   <img src="https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black" />
   <img src="https://img.shields.io/badge/MySQL-8-4479A1?style=for-the-badge&logo=mysql&logoColor=white" />
-  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" />
 </p>
 
 ---
@@ -116,7 +115,6 @@ carbon_track/
 │   └── package.json
 ├── .env.example            # Environment variable template
 ├── .gitignore
-├── LICENSE
 └── README.md
 ```
 
@@ -323,12 +321,6 @@ mvn test
 3. Commit changes: `git commit -m 'Add amazing feature'`
 4. Push to branch: `git push origin feature/amazing-feature`
 5. Open a Pull Request.
-
----
-
-## 📄 License
-
-This project is licensed under the **MIT License**. See [LICENSE](LICENSE) for details.
 
 ---
 
